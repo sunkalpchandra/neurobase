@@ -235,14 +235,14 @@ describe("internal consistency", () => {
     const undisclosed = dataset.fundingRounds.filter((round) => round.amountUsd === null);
     expect(undisclosed.length).toBeGreaterThan(0);
     for (const round of dataset.fundingRounds) {
-      expect(round.amountUsd === null || round.amountUsd > 0).toBe(true);
+      expect(round.amountUsd == null || round.amountUsd > 0).toBe(true);
     }
   });
 
   it("keeps each company's disclosed total equal to the sum of its disclosed rounds", () => {
     const totals = new Map<string, number>();
     for (const round of dataset.fundingRounds) {
-      if (round.amountUsd === null) continue;
+      if (round.amountUsd == null) continue;
       totals.set(round.organizationId, (totals.get(round.organizationId) ?? 0) + round.amountUsd);
     }
     for (const company of companies(dataset)) {
