@@ -9,7 +9,6 @@ export default defineConfig({
   resolve: { alias },
   test: {
     globals: true,
-    setupFiles: ["./tests/setup.ts"],
     env: {
       DATABASE_URL: process.env.TEST_DATABASE_URL ?? "postgres://localhost:5432/neurobase_test",
     },
@@ -27,6 +26,7 @@ export default defineConfig({
         test: {
           name: "dom",
           environment: "jsdom",
+          setupFiles: ["./tests/setup.ts"],
           include: ["src/**/*.test.tsx", "tests/unit/**/*.test.tsx"],
         },
       },
