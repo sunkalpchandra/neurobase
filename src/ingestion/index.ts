@@ -1,0 +1,10 @@
+export { runPipeline } from "./pipeline";
+export { createAdapterRegistry, findAdapter } from "./adapters";
+export { createDrizzleRepository } from "./repository-drizzle";
+export { createMemoryRepository, trigramSimilarity } from "./repository-memory";
+export { naturalKey, recordTitle, normalizedRecordSchema } from "./normalized";
+export { eventDedupeKey } from "./stages/publish";
+export { normalizeForMatch, SIMILARITY_THRESHOLD } from "./stages/resolve-entities";
+export type { NormalizedRecord } from "./normalized";
+export type { IngestionRepository, PublishInput, PublishResult } from "./repository";
+export type { PipelineOptions, PipelineReport, SourceAdapter, StageCounts } from "./types";
