@@ -582,6 +582,9 @@ export type IngestionRunStatus = (typeof INGESTION_RUN_STATUSES)[number];
 export const REVIEW_STATUSES = ["pending", "approved", "rejected"] as const;
 export type ReviewStatus = (typeof REVIEW_STATUSES)[number];
 
+/** Label shown wherever development-sample rows appear. */
+export const SAMPLE_DATA_LABEL = "Development sample";
+
 /** Topic filters on the home feed. Values are technology-category slugs plus "all". */
 export const FEED_SCOPES = ["all", "following"] as const;
 export type FeedScope = (typeof FEED_SCOPES)[number];

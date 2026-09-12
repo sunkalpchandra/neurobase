@@ -2,8 +2,7 @@ import type { Database } from "@/db/client";
 import type * as schema from "@/db/schema";
 import type { ISODate } from "@/domain/types";
 
-/** Label shown wherever development-sample rows appear. */
-export const SAMPLE_DATA_LABEL = "Development sample";
+export { SAMPLE_DATA_LABEL } from "@/domain/enums";
 
 export interface SampleDatasetOptions {
   /** Deterministic PRNG seed. Same seed and scale always yield the same dataset. */
