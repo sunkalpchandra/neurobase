@@ -14,7 +14,10 @@ export const technologyCategories = pgTable(
     }),
     ...timestampColumns,
   },
-  (t) => [uniqueIndex("technology_categories_slug_uidx").on(t.slug), index("technology_categories_parent_idx").on(t.parentId)],
+  (t) => [
+    uniqueIndex("technology_categories_slug_uidx").on(t.slug),
+    index("technology_categories_parent_idx").on(t.parentId),
+  ],
 );
 
 export const conditions = pgTable(
@@ -27,5 +30,8 @@ export const conditions = pgTable(
     description: text("description"),
     ...timestampColumns,
   },
-  (t) => [uniqueIndex("conditions_slug_uidx").on(t.slug), index("conditions_category_idx").on(t.category)],
+  (t) => [
+    uniqueIndex("conditions_slug_uidx").on(t.slug),
+    index("conditions_category_idx").on(t.category),
+  ],
 );

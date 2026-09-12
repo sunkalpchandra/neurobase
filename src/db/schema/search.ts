@@ -1,5 +1,18 @@
 import { sql } from "drizzle-orm";
-import { boolean, customType, date, index, pgTable, real, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
+import {
+  boolean,
+  customType,
+  date,
+  index,
+  jsonb,
+  pgTable,
+  real,
+  text,
+  timestamp,
+  uniqueIndex,
+  uuid,
+} from "drizzle-orm/pg-core";
+import type { EntityRef } from "../../domain/types";
 import {
   developmentStageEnum,
   entityTypeEnum,
@@ -35,7 +48,15 @@ export const searchDocuments = pgTable(
     href: text("href").notNull(),
     title: text("title").notNull(),
     subtitle: text("subtitle"),
+    /** Short description shown in result lists; the body is the full searchable text. */
+    description: text("description").notNull().default(""),
     body: text("body").notNull().default(""),
+    /** Display-only metadata pairs and linked entities, denormalised to avoid joins at read time. */
+    metadata: jsonb("metadata")
+      .$type<Array<{ label: string; value: string }>>()
+      .notNull()
+      .default([]),
+    entities: jsonb("entities").$type<EntityRef[]>().notNull().default([]),
     /** Extra searchable terms: category names, synonyms, identifiers. */
     keywords: text("keywords").array().notNull().default([]),
     /** Facets as slugs / enum values. */
@@ -52,7 +73,9 @@ export const searchDocuments = pgTable(
     sourceTypes: sourceTypeEnum("source_types").array().notNull().default([]),
     /** Best source-type reliability prior among the entity's sources, 0..1. */
     sourceQuality: real("source_quality").notNull().default(0.5),
-    verificationStatus: verificationStatusEnum("verification_status").notNull().default("unverified"),
+    verificationStatus: verificationStatusEnum("verification_status")
+      .notNull()
+      .default("unverified"),
     isSample: boolean("is_sample").notNull().default(false),
     entityUpdatedAt: timestamp("entity_updated_at", { withTimezone: true }).notNull(),
     indexedAt: timestamp("indexed_at", { withTimezone: true }).notNull().defaultNow(),

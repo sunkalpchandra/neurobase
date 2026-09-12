@@ -41,10 +41,15 @@ export const organizations = pgTable(
     hqCountry: text("hq_country"),
     foundedYear: integer("founded_year"),
     operatingStatus: operatingStatusEnum("operating_status").notNull().default("active"),
-    parentOrganizationId: uuid("parent_organization_id").references((): AnyPgColumn => organizations.id, {
+    parentOrganizationId: uuid("parent_organization_id").references(
+      (): AnyPgColumn => organizations.id,
+      {
+        onDelete: "set null",
+      },
+    ),
+    primaryIndicationId: uuid("primary_indication_id").references(() => conditions.id, {
       onDelete: "set null",
     }),
-    primaryIndicationId: uuid("primary_indication_id").references(() => conditions.id, { onDelete: "set null" }),
     invasiveness: invasivenessEnum("invasiveness"),
     modality: modalityEnum("modality"),
     developmentStage: developmentStageEnum("development_stage"),
@@ -73,7 +78,10 @@ export const organizationTechnologyCategories = pgTable(
       .notNull()
       .references(() => technologyCategories.id, { onDelete: "cascade" }),
   },
-  (t) => [primaryKey({ columns: [t.organizationId, t.categoryId] }), index("org_tech_categories_category_idx").on(t.categoryId)],
+  (t) => [
+    primaryKey({ columns: [t.organizationId, t.categoryId] }),
+    index("org_tech_categories_category_idx").on(t.categoryId),
+  ],
 );
 
 /** Target indications an organization works on (beyond the single primary indication). */
@@ -87,7 +95,10 @@ export const organizationConditions = pgTable(
       .notNull()
       .references(() => conditions.id, { onDelete: "cascade" }),
   },
-  (t) => [primaryKey({ columns: [t.organizationId, t.conditionId] }), index("org_conditions_condition_idx").on(t.conditionId)],
+  (t) => [
+    primaryKey({ columns: [t.organizationId, t.conditionId] }),
+    index("org_conditions_condition_idx").on(t.conditionId),
+  ],
 );
 
 export const organizationRelationships = pgTable(
@@ -105,7 +116,11 @@ export const organizationRelationships = pgTable(
     ...provenanceColumns,
   },
   (t) => [
-    uniqueIndex("organization_relationships_uidx").on(t.fromOrganizationId, t.toOrganizationId, t.relationshipType),
+    uniqueIndex("organization_relationships_uidx").on(
+      t.fromOrganizationId,
+      t.toOrganizationId,
+      t.relationshipType,
+    ),
     index("organization_relationships_to_idx").on(t.toOrganizationId),
   ],
 );
@@ -145,5 +160,8 @@ export const organizationPeople = pgTable(
     startYear: integer("start_year"),
     endYear: integer("end_year"),
   },
-  (t) => [primaryKey({ columns: [t.organizationId, t.personId, t.role] }), index("organization_people_person_idx").on(t.personId)],
+  (t) => [
+    primaryKey({ columns: [t.organizationId, t.personId, t.role] }),
+    index("organization_people_person_idx").on(t.personId),
+  ],
 );

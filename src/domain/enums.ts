@@ -427,7 +427,16 @@ export const EVENT_TYPE_LABELS: Record<EventType, string> = {
   news: "News",
 };
 
-export const REGULATORY_AGENCIES = ["FDA", "EMA", "MHRA", "PMDA", "NMPA", "Health Canada", "TGA", "other"] as const;
+export const REGULATORY_AGENCIES = [
+  "FDA",
+  "EMA",
+  "MHRA",
+  "PMDA",
+  "NMPA",
+  "Health Canada",
+  "TGA",
+  "other",
+] as const;
 export type RegulatoryAgency = (typeof REGULATORY_AGENCIES)[number];
 
 export const REGULATORY_ACTION_TYPES = [

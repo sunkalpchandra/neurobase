@@ -10,14 +10,16 @@ export default defineConfig({
   test: {
     globals: true,
     setupFiles: ["./tests/setup.ts"],
-    env: { DATABASE_URL: process.env.TEST_DATABASE_URL ?? "postgres://localhost:5432/neurobase_test" },
+    env: {
+      DATABASE_URL: process.env.TEST_DATABASE_URL ?? "postgres://localhost:5432/neurobase_test",
+    },
     projects: [
       {
         extends: true,
         test: {
-          name: "node",
+          name: "unit",
           environment: "node",
-          include: ["src/**/*.test.ts", "tests/unit/**/*.test.ts", "tests/integration/**/*.test.ts"],
+          include: ["src/**/*.test.ts", "tests/unit/**/*.test.ts"],
         },
       },
       {
@@ -26,6 +28,18 @@ export default defineConfig({
           name: "dom",
           environment: "jsdom",
           include: ["src/**/*.test.tsx", "tests/unit/**/*.test.tsx"],
+        },
+      },
+      {
+        // Integration tests share one database, so files run one at a time.
+        extends: true,
+        test: {
+          name: "integration",
+          environment: "node",
+          include: ["tests/integration/**/*.test.ts"],
+          fileParallelism: false,
+          testTimeout: 30_000,
+          hookTimeout: 60_000,
         },
       },
     ],

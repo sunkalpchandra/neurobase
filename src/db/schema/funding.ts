@@ -17,7 +17,10 @@ export const fundingRounds = pgTable(
     currency: text("currency").notNull().default("USD"),
     ...provenanceColumns,
   },
-  (t) => [index("funding_rounds_org_idx").on(t.organizationId), index("funding_rounds_date_idx").on(t.announcedOn)],
+  (t) => [
+    index("funding_rounds_org_idx").on(t.organizationId),
+    index("funding_rounds_date_idx").on(t.announcedOn),
+  ],
 );
 
 export const fundingRoundInvestors = pgTable(

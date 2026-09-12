@@ -6,10 +6,22 @@ import { z } from "zod";
 const envSchema = z.object({
   DATABASE_URL: z.string().url().default("postgres://localhost:5432/neurobase"),
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
-  EMBEDDINGS_PROVIDER: z.enum(["openai"]).optional().or(z.literal("").transform(() => undefined)),
-  OPENAI_API_KEY: z.string().optional().or(z.literal("").transform(() => undefined)),
-  INGEST_CONTACT_EMAIL: z.string().optional().or(z.literal("").transform(() => undefined)),
-  NCBI_API_KEY: z.string().optional().or(z.literal("").transform(() => undefined)),
+  EMBEDDINGS_PROVIDER: z
+    .enum(["openai"])
+    .optional()
+    .or(z.literal("").transform(() => undefined)),
+  OPENAI_API_KEY: z
+    .string()
+    .optional()
+    .or(z.literal("").transform(() => undefined)),
+  INGEST_CONTACT_EMAIL: z
+    .string()
+    .optional()
+    .or(z.literal("").transform(() => undefined)),
+  NCBI_API_KEY: z
+    .string()
+    .optional()
+    .or(z.literal("").transform(() => undefined)),
 });
 
 export type Env = z.infer<typeof envSchema>;

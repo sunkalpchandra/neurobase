@@ -13,8 +13,14 @@ export default defineConfig({
   expect: { timeout: 10_000 },
   use: { baseURL, trace: "retain-on-failure" },
   projects: [
-    { name: "desktop-1440", use: { ...devices["Desktop Chrome"], viewport: { width: 1440, height: 900 } } },
-    { name: "laptop-1024", use: { ...devices["Desktop Chrome"], viewport: { width: 1024, height: 768 } } },
+    {
+      name: "desktop-1440",
+      use: { ...devices["Desktop Chrome"], viewport: { width: 1440, height: 900 } },
+    },
+    {
+      name: "laptop-1024",
+      use: { ...devices["Desktop Chrome"], viewport: { width: 1024, height: 768 } },
+    },
     { name: "mobile-390", use: { ...devices["Pixel 5"], viewport: { width: 390, height: 844 } } },
   ],
   webServer: {

@@ -1,4 +1,13 @@
-import { date, index, integer, pgTable, primaryKey, text, uniqueIndex, uuid } from "drizzle-orm/pg-core";
+import {
+  date,
+  index,
+  integer,
+  pgTable,
+  primaryKey,
+  text,
+  uniqueIndex,
+  uuid,
+} from "drizzle-orm/pg-core";
 import { provenanceColumns } from "./common";
 import { datePrecisionEnum, evidenceStageEnum, trialPhaseEnum, trialStatusEnum } from "./enums";
 import { devices } from "./devices";
@@ -52,7 +61,10 @@ export const trialConditions = pgTable(
       .notNull()
       .references(() => conditions.id, { onDelete: "cascade" }),
   },
-  (t) => [primaryKey({ columns: [t.trialId, t.conditionId] }), index("trial_conditions_condition_idx").on(t.conditionId)],
+  (t) => [
+    primaryKey({ columns: [t.trialId, t.conditionId] }),
+    index("trial_conditions_condition_idx").on(t.conditionId),
+  ],
 );
 
 export const trialDevices = pgTable(
@@ -65,5 +77,8 @@ export const trialDevices = pgTable(
       .notNull()
       .references(() => devices.id, { onDelete: "cascade" }),
   },
-  (t) => [primaryKey({ columns: [t.trialId, t.deviceId] }), index("trial_devices_device_idx").on(t.deviceId)],
+  (t) => [
+    primaryKey({ columns: [t.trialId, t.deviceId] }),
+    index("trial_devices_device_idx").on(t.deviceId),
+  ],
 );

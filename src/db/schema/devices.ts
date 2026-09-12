@@ -1,6 +1,12 @@
 import { date, index, pgTable, primaryKey, text, uniqueIndex, uuid } from "drizzle-orm/pg-core";
 import { provenanceColumns } from "./common";
-import { developmentStageEnum, evidenceStageEnum, interfaceTypeEnum, invasivenessEnum, modalityEnum } from "./enums";
+import {
+  developmentStageEnum,
+  evidenceStageEnum,
+  interfaceTypeEnum,
+  invasivenessEnum,
+  modalityEnum,
+} from "./enums";
 import { organizations } from "./organizations";
 import { sources } from "./sources";
 import { conditions, technologyCategories } from "./taxonomy";
@@ -63,7 +69,10 @@ export const deviceConditions = pgTable(
       .notNull()
       .references(() => conditions.id, { onDelete: "cascade" }),
   },
-  (t) => [primaryKey({ columns: [t.deviceId, t.conditionId] }), index("device_conditions_condition_idx").on(t.conditionId)],
+  (t) => [
+    primaryKey({ columns: [t.deviceId, t.conditionId] }),
+    index("device_conditions_condition_idx").on(t.conditionId),
+  ],
 );
 
 export const deviceTechnologyCategories = pgTable(
@@ -76,5 +85,8 @@ export const deviceTechnologyCategories = pgTable(
       .notNull()
       .references(() => technologyCategories.id, { onDelete: "cascade" }),
   },
-  (t) => [primaryKey({ columns: [t.deviceId, t.categoryId] }), index("device_tech_categories_category_idx").on(t.categoryId)],
+  (t) => [
+    primaryKey({ columns: [t.deviceId, t.categoryId] }),
+    index("device_tech_categories_category_idx").on(t.categoryId),
+  ],
 );

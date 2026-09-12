@@ -1,7 +1,23 @@
-import { date, index, integer, jsonb, pgTable, primaryKey, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
+import {
+  date,
+  index,
+  integer,
+  jsonb,
+  pgTable,
+  primaryKey,
+  text,
+  timestamp,
+  uniqueIndex,
+  uuid,
+} from "drizzle-orm/pg-core";
 import type { ImpactAssessment } from "../../domain/types";
 import { provenanceColumns } from "./common";
-import { entityTypeEnum, eventTypeEnum, evidenceStageEnum, regulatoryActionTypeEnum } from "./enums";
+import {
+  entityTypeEnum,
+  eventTypeEnum,
+  evidenceStageEnum,
+  regulatoryActionTypeEnum,
+} from "./enums";
 import { devices } from "./devices";
 import { organizations } from "./organizations";
 import { sources } from "./sources";
@@ -68,7 +84,10 @@ export const eventSources = pgTable(
       .notNull()
       .references(() => sources.id, { onDelete: "cascade" }),
   },
-  (t) => [primaryKey({ columns: [t.eventId, t.sourceId] }), index("event_sources_source_idx").on(t.sourceId)],
+  (t) => [
+    primaryKey({ columns: [t.eventId, t.sourceId] }),
+    index("event_sources_source_idx").on(t.sourceId),
+  ],
 );
 
 /** A news article. Every article is also a source; articles about one development share an event. */
@@ -99,7 +118,9 @@ export const regulatoryActions = pgTable(
   "regulatory_actions",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    organizationId: uuid("organization_id").references(() => organizations.id, { onDelete: "set null" }),
+    organizationId: uuid("organization_id").references(() => organizations.id, {
+      onDelete: "set null",
+    }),
     deviceId: uuid("device_id").references(() => devices.id, { onDelete: "set null" }),
     agency: text("agency").notNull(),
     actionType: regulatoryActionTypeEnum("action_type").notNull(),

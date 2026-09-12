@@ -1,4 +1,13 @@
-import { index, pgTable, primaryKey, text, timestamp, uniqueIndex, uuid, date } from "drizzle-orm/pg-core";
+import {
+  index,
+  pgTable,
+  primaryKey,
+  text,
+  timestamp,
+  uniqueIndex,
+  uuid,
+  date,
+} from "drizzle-orm/pg-core";
 import { provenanceColumns } from "./common";
 import { entityTypeEnum, sourceTypeEnum } from "./enums";
 
@@ -50,5 +59,8 @@ export const claimSources = pgTable(
     /** Optional verbatim excerpt from the source supporting the claim. */
     excerpt: text("excerpt"),
   },
-  (t) => [primaryKey({ columns: [t.claimId, t.sourceId] }), index("claim_sources_source_idx").on(t.sourceId)],
+  (t) => [
+    primaryKey({ columns: [t.claimId, t.sourceId] }),
+    index("claim_sources_source_idx").on(t.sourceId),
+  ],
 );

@@ -1,4 +1,14 @@
-import { boolean, date, index, integer, pgTable, primaryKey, text, uniqueIndex, uuid } from "drizzle-orm/pg-core";
+import {
+  boolean,
+  date,
+  index,
+  integer,
+  pgTable,
+  primaryKey,
+  text,
+  uniqueIndex,
+  uuid,
+} from "drizzle-orm/pg-core";
 import { provenanceColumns } from "./common";
 import { evidenceStageEnum, publicationTypeEnum, studyTypeEnum } from "./enums";
 import { devices } from "./devices";
@@ -42,7 +52,10 @@ export const publicationAuthors = pgTable(
     authorPosition: integer("author_position").notNull(),
     isCorresponding: boolean("is_corresponding").notNull().default(false),
   },
-  (t) => [primaryKey({ columns: [t.publicationId, t.personId] }), index("publication_authors_person_idx").on(t.personId)],
+  (t) => [
+    primaryKey({ columns: [t.publicationId, t.personId] }),
+    index("publication_authors_person_idx").on(t.personId),
+  ],
 );
 
 export const publicationDevices = pgTable(
@@ -55,7 +68,10 @@ export const publicationDevices = pgTable(
       .notNull()
       .references(() => devices.id, { onDelete: "cascade" }),
   },
-  (t) => [primaryKey({ columns: [t.publicationId, t.deviceId] }), index("publication_devices_device_idx").on(t.deviceId)],
+  (t) => [
+    primaryKey({ columns: [t.publicationId, t.deviceId] }),
+    index("publication_devices_device_idx").on(t.deviceId),
+  ],
 );
 
 /** Author affiliations and sponsoring organizations. */

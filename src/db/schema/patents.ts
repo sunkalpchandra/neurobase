@@ -41,7 +41,10 @@ export const patentInventors = pgTable(
       .notNull()
       .references(() => people.id, { onDelete: "cascade" }),
   },
-  (t) => [primaryKey({ columns: [t.patentId, t.personId] }), index("patent_inventors_person_idx").on(t.personId)],
+  (t) => [
+    primaryKey({ columns: [t.patentId, t.personId] }),
+    index("patent_inventors_person_idx").on(t.personId),
+  ],
 );
 
 export const patentDevices = pgTable(
@@ -54,5 +57,8 @@ export const patentDevices = pgTable(
       .notNull()
       .references(() => devices.id, { onDelete: "cascade" }),
   },
-  (t) => [primaryKey({ columns: [t.patentId, t.deviceId] }), index("patent_devices_device_idx").on(t.deviceId)],
+  (t) => [
+    primaryKey({ columns: [t.patentId, t.deviceId] }),
+    index("patent_devices_device_idx").on(t.deviceId),
+  ],
 );
