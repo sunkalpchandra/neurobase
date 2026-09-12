@@ -61,7 +61,7 @@ function likePattern(text: string): string {
   return `%${text.replace(/[\\%_]/g, (char) => `\\${char}`)}%`;
 }
 
-function directoryConditions(query: CompanyDirectoryQuery): SQL[] {
+function directoryConditions(db: Database, query: CompanyDirectoryQuery): SQL[] {
   const conditions: SQL[] = [eq(companies.kind, "company")];
   if (query.q) {
     const pattern = likePattern(query.q);
@@ -69,23 +69,53 @@ function directoryConditions(query: CompanyDirectoryQuery): SQL[] {
       or(ilike(companies.name, pattern), ilike(companies.description, pattern)) as SQL,
     );
   }
+  // Correlated EXISTS subqueries are built with the query builder rather than raw SQL:
+  // embedding a JS array in an sql`` template flattens it into separate parameters,
+  // which Postgres then rejects as a malformed array literal.
   if (query.technologyCategories?.length) {
     conditions.push(
       exists(
-        sql`(select 1 from ${schema.organizationTechnologyCategories} otc
-          join ${schema.technologyCategories} tc on tc.id = otc.category_id
-          where otc.organization_id = ${companies.id} and tc.slug = any(${query.technologyCategories}))`,
+        db
+          .select({ one: sql`1` })
+          .from(schema.organizationTechnologyCategories)
+          .innerJoin(
+            schema.technologyCategories,
+            eq(schema.technologyCategories.id, schema.organizationTechnologyCategories.categoryId),
+          )
+          .where(
+            and(
+              eq(schema.organizationTechnologyCategories.organizationId, companies.id),
+              inArray(schema.technologyCategories.slug, query.technologyCategories),
+            ),
+          ),
       ),
     );
   }
   if (query.conditions?.length) {
     conditions.push(
       exists(
-        sql`(select 1 from ${schema.conditions} c
-          where c.slug = any(${query.conditions})
-            and (c.id = ${companies.primaryIndicationId}
-              or exists (select 1 from ${schema.organizationConditions} oc
-                         where oc.organization_id = ${companies.id} and oc.condition_id = c.id)))`,
+        db
+          .select({ one: sql`1` })
+          .from(schema.conditions)
+          .where(
+            and(
+              inArray(schema.conditions.slug, query.conditions),
+              or(
+                eq(schema.conditions.id, companies.primaryIndicationId),
+                exists(
+                  db
+                    .select({ one: sql`1` })
+                    .from(schema.organizationConditions)
+                    .where(
+                      and(
+                        eq(schema.organizationConditions.organizationId, companies.id),
+                        eq(schema.organizationConditions.conditionId, schema.conditions.id),
+                      ),
+                    ),
+                ),
+              ),
+            ),
+          ),
       ),
     );
   }
@@ -165,7 +195,7 @@ export async function listCompanies(
   query: CompanyDirectoryQuery,
 ): Promise<CompanyDirectoryResult> {
   const offset = decodeCursor(query.cursor);
-  const where = and(...directoryConditions(query));
+  const where = and(...directoryConditions(db, query));
   const [rows, [countRow], categoryFacets, conditionFacets, countryFacets] = await Promise.all([
     db
       .select()
