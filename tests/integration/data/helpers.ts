@@ -44,4 +44,7 @@ export async function removeTestDataset(db: Database, dataset: SampleDataset): P
   await remove(schema.sources, dataset.sources);
   await remove(schema.technologyCategories, dataset.technologyCategories);
   await remove(schema.conditions, dataset.conditions);
+  // entity_aliases holds a loose polymorphic reference with no foreign key, so cascades
+  // never reach it; its rows have to be removed by id like any other root table.
+  await remove(schema.entityAliases, dataset.entityAliases);
 }

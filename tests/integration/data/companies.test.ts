@@ -15,7 +15,7 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await removeTestDataset(db, dataset);
+  if (db && dataset) await removeTestDataset(db, dataset);
 });
 
 describe("listCompanies", () => {

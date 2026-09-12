@@ -23,8 +23,8 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await db.delete(schema.userProfiles).where(eq(schema.userProfiles.id, profileId));
-  await removeTestDataset(db, dataset);
+  if (profileId) await db.delete(schema.userProfiles).where(eq(schema.userProfiles.id, profileId));
+  if (db && dataset) await removeTestDataset(db, dataset);
 });
 
 describe("feed", () => {
