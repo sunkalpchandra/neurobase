@@ -1,0 +1,49 @@
+{
+  "uid": "42726882",
+  "title": "Analog neural network-based wireless receiver.",
+  "fulljournalname": "Science advances",
+  "source": "Sci Adv",
+  "pubdate": "2026 Sep 11",
+  "authors": [
+    {
+      "name": "He C",
+      "authtype": "Author",
+      "clusterid": ""
+    },
+    {
+      "name": "Huang Y",
+      "authtype": "Author",
+      "clusterid": ""
+    },
+    {
+      "name": "Korkmaz A",
+      "authtype": "Author",
+      "clusterid": ""
+    },
+    {
+      "name": "Jaberi Rad A",
+      "authtype": "Author",
+      "clusterid": ""
+    },
+    {
+      "name": "Xia Q",
+      "authtype": "Author",
+      "clusterid": ""
+    }
+  ],
+  "articleids": [
+    {
+      "idtype": "pubmed",
+      "idtypen": 1,
+      "value": "42726882"
+    },
+    {
+      "idtype": "doi",
+      "idtypen": 3,
+      "value": "10.1126/sciadv.aeg7153"
+    }
+  ],
+  "pubtype": [
+    "Journal Article"
+  ]
+}

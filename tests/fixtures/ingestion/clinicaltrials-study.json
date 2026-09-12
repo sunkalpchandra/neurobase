@@ -1,0 +1,75 @@
+{
+  "protocolSection": {
+    "identificationModule": {
+      "nctId": "NCT06243952",
+      "briefTitle": "Brain Controlled Spinal Cord Stimulation In Participants With Spinal Cord Injury For Lower Limb Rehabilitation",
+      "officialTitle": "Brain Controlled Spinal Cord Stimulation In Participants With Spinal Cord Injury For Lower Limb Rehabilitation",
+      "organization": {
+        "fullName": "Ecole Polytechnique F\u00e9d\u00e9rale de Lausanne",
+        "class": "OTHER"
+      }
+    },
+    "statusModule": {
+      "overallStatus": "ACTIVE_NOT_RECRUITING",
+      "startDateStruct": {
+        "date": "2024-05-03",
+        "type": "ACTUAL"
+      },
+      "completionDateStruct": {
+        "date": "2030-07",
+        "type": "ESTIMATED"
+      },
+      "lastUpdateSubmitDate": "2026-07-27"
+    },
+    "descriptionModule": {
+      "briefSummary": "The purpose of this clinical study is to evaluate the preliminary safety and effectiveness of using a cortical recording device (ECoG) combined with lumbar targeted epidural electrical stimulation (EES) of the spinal cord to restore voluntary motor functions of lower limbs in participants with chron",
+      "detailedDescription": "In a current first-in-human clinical trial, called STIMO (ClinicalTrials.gov, NCT02936453), Electrical Epidural Stimulation (EES) of the spinal cord is applied to enable individuals with chronic severe spinal cord injury (SCI) to complete intensive locomotor neurorehabilitation training. In this clinical feasibility study, EES immediately enhances walking function and, with repeated use as part of the EES-assisted neurorehabilitation program, improves leg motor control and neurological recovery in severe SCI participants to a certain extent. Linking brain activity to spinal stimulation, as shown in preclinical and clinical studies, enhances usability of EES and neurological recovery.\n\nClinatec (CEA, Grenoble, France) has developed an implantable electrocorticogram (ECoG) recording device with a 64-channel epidural electrode array called WIMAGINE capable of recording electrical signals from the motor cortex for an extended period and with a high signal to noise ratio. This ECoG-based system allowed tetraplegic patients to control an exoskeleton (Clinicaltrials.gov, NCT 02550522) with up to 8 degrees of freedom for the upper limb control. This device has been implanted in 5 chronic participants so far; one of them has been using this system both at the hospital and at home for more than 3 years.\n\nThe ECoG WIMAGINE technology has been combined with EES in the current first-in-human clinical trial STIMO-BSI (Brain Spine Interface) (Clinicaltrials.gov, NTC04632290): with the WIMAGINE technology, cortical motor intentions for leg movements are recorded, and real-time decoding translates brain signals into EES commands. This digital bridge empowered a chronic SCI participant, who has been part of the STIMO clinical trial, to regain leg motor control by volitional fine-tuned EES amplitudes enabling standing, walking and adapting to diverse terrains, demonstrating the efficacy of the BSI. Moreover, BSI-assisted neurorehabilitation mediated neurological improvements after three years of stable performance of the patient, that persisted even when the BSI was switched off.\n\nIn this study, the investigators will assess the preliminary safety and effectiveness of ECoG-controlled EES in individuals with chronic SCI who have not previously participated in STIMO clinical trial, to establish a direct bridge between the motor intention and the spinal cord below the lesion. This could improve or restore voluntary control of legs movement as well as promote neurological recovery when combined with neurorehabilitation. The WIMAGINE ECoG system will be coupled with the ARC-IM purpose-built spinal cord stimulation technology in the ARC-BSI Lumbar system. An equivalent technology (ARC-BSI Cervical system) is currently used in the ongoing UP2 clinical study (Clinicaltrials.gov, NCT05665998) for upper limb rehabilitation in patients with cervical spinal cord injury."
+    },
+    "conditionsModule": {
+      "conditions": [
+        "Spinal Cord Injuries",
+        "Paraplegia"
+      ]
+    },
+    "designModule": {
+      "phases": [
+        "NA"
+      ],
+      "studyType": "INTERVENTIONAL",
+      "designInfo": {
+        "allocation": "NA",
+        "interventionModel": "SINGLE_GROUP",
+        "interventionModelDescription": "monocentric, single-arm, non-blinded, non-randomized, interventional",
+        "primaryPurpose": "TREATMENT",
+        "maskingInfo": {
+          "masking": "NONE"
+        }
+      },
+      "enrollmentInfo": {
+        "count": 3,
+        "type": "ESTIMATED"
+      }
+    },
+    "armsInterventionsModule": {
+      "interventions": [
+        {
+          "type": "DEVICE",
+          "name": "ARC-BSI Lumbar system"
+        }
+      ]
+    },
+    "sponsorCollaboratorsModule": {
+      "leadSponsor": {
+        "name": "Ecole Polytechnique F\u00e9d\u00e9rale de Lausanne",
+        "class": "OTHER"
+      }
+    },
+    "outcomesModule": {
+      "primaryOutcomes": [
+        {
+          "measure": "Preliminary safety"
+        }
+      ]
+    }
+  }
+}

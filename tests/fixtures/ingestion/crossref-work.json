@@ -1,0 +1,45 @@
+{
+  "DOI": "10.1016/j.neurom.2023.04.248",
+  "title": [
+    "ID: 210536 360 Spinal Cord Neural Interface"
+  ],
+  "container-title": [
+    "Neuromodulation: Technology at the Neural Interface"
+  ],
+  "issued": {
+    "date-parts": [
+      [
+        2023,
+        6
+      ]
+    ]
+  },
+  "created": {
+    "date-parts": [
+      [
+        2023,
+        6,
+        5
+      ]
+    ],
+    "date-time": "2023-06-05T05:58:00Z",
+    "timestamp": 1685944680000
+  },
+  "type": "journal-article",
+  "publisher": "Elsevier BV",
+  "author": [
+    {
+      "given": "Damiano Giuseppe",
+      "family": "Barone",
+      "sequence": "first",
+      "affiliation": [],
+      "role": [
+        {
+          "role": "author",
+          "vocabulary": "crossref"
+        }
+      ]
+    }
+  ],
+  "URL": "https://doi.org/10.1016/j.neurom.2023.04.248"
+}

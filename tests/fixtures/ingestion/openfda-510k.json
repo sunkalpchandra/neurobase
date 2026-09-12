@@ -1,0 +1,14 @@
+{
+  "k_number": "K193589",
+  "device_name": "TrueTear Intranasal Tear Neurostimulator",
+  "applicant": "Allergan",
+  "decision_date": "2020-08-31",
+  "decision_code": "SESE",
+  "decision_description": "Substantially Equivalent",
+  "openfda": {
+    "device_name": "Intranasal Electrostimulation Device For Dry Eye Symptoms",
+    "medical_specialty_description": "Ophthalmic",
+    "regulation_number": "886.5310",
+    "device_class": "2"
+  }
+}
