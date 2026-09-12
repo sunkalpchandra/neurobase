@@ -21,11 +21,16 @@ async function main(): Promise<void> {
     SELECT EXISTS (SELECT 1 FROM pg_available_extensions WHERE name = 'vector') AS available
   `;
   if (vector?.available) {
-    const optional = await readFile(path.join(process.cwd(), "drizzle", "optional", "vector.sql"), "utf8");
+    const optional = await readFile(
+      path.join(process.cwd(), "drizzle", "optional", "vector.sql"),
+      "utf8",
+    );
     await sql.unsafe(optional);
     console.log("pgvector available: search_embeddings table ensured.");
   } else {
-    console.log("pgvector not available on this server: semantic search stays disabled (lexical fallback).");
+    console.log(
+      "pgvector not available on this server: semantic search stays disabled (lexical fallback).",
+    );
   }
 }
 
