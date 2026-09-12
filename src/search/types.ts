@@ -35,6 +35,11 @@ export interface SearchRequest {
   filters: SearchFilters;
   cursor: string | null;
   pageSize: number;
+  /**
+   * Apply the filters the parser infers from the query text (default true). The search
+   * page passes false when a searcher has dismissed an interpreted filter.
+   */
+  applyInterpretedFilters?: boolean;
 }
 
 /** A filter the parser inferred from the query text, e.g. "noninvasive" → invasiveness. */
@@ -55,6 +60,8 @@ export interface ParsedQuery {
   interpreted: InterpretedFilter[];
   /** Postgres tsquery text passed to to_tsquery('english', ...). Empty when no terms. */
   tsquery: string;
+  /** Quoted phrases searched exactly (also present in `terms`; never interpreted or expanded). */
+  phrases: string[];
 }
 
 export interface SearchWeights {
