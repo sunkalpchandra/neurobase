@@ -82,10 +82,11 @@ export interface ClaimRecord {
   sources: SourceRecord[];
 }
 
-/** A source together with the claims it supports, as shown in a source ledger. */
+/** A source together with the claims and developments it supports, as shown in a source ledger. */
 export interface SourceLedgerEntry {
   source: SourceRecord;
   supportedClaims: Array<Pick<ClaimRecord, "id" | "statement" | "claimKind">>;
+  supportedEvents?: EntityRef[];
 }
 
 export interface ImpactComponentAssessment {
@@ -414,4 +415,80 @@ export interface ApiError {
     message: string;
     details?: unknown;
   };
+}
+
+export interface NewsArticleSummary {
+  id: string;
+  title: string;
+  summary: string;
+  url: string;
+  publisher: string;
+  publishedAt: ISOTimestamp;
+  sourceId: string;
+}
+
+/** A development with everything the news detail page shows. */
+export interface EventDetail extends FeedItem {
+  sources: SourceRecord[];
+  articles: NewsArticleSummary[];
+}
+
+export interface DeviceProfile extends DeviceDetail {
+  clinicalTrials: ClinicalTrialSummary[];
+  publications: PublicationSummary[];
+  patents: PatentSummary[];
+  regulatoryActions: RegulatoryActionSummary[];
+  timeline: TimelineEvent[];
+  claims: ClaimRecord[];
+}
+
+export interface ClinicalTrialDetail extends ClinicalTrialSummary {
+  officialTitle: string | null;
+  primaryOutcome: string | null;
+  registryUpdatedOn: ISODate | null;
+  publications: PublicationSummary[];
+  timeline: TimelineEvent[];
+  sources: SourceLedgerEntry[];
+  claims: ClaimRecord[];
+}
+
+export interface PublicationDetail extends PublicationSummary {
+  timeline: TimelineEvent[];
+  sources: SourceLedgerEntry[];
+  claims: ClaimRecord[];
+}
+
+export interface PatentDetail extends PatentSummary {
+  timeline: TimelineEvent[];
+  sources: SourceLedgerEntry[];
+  claims: ClaimRecord[];
+}
+
+export interface SourceClaim extends ClaimRecord {
+  entity: EntityRef | null;
+}
+
+export interface SourceDetail {
+  source: SourceRecord;
+  claims: SourceClaim[];
+  events: EntityRef[];
+  articles: NewsArticleSummary[];
+}
+
+export interface ResearcherProfile extends Provenance {
+  id: string;
+  slug: string;
+  fullName: string;
+  title: string | null;
+  orcid: string | null;
+  researchAreas: string[];
+  primaryOrganization: OrganizationRef | null;
+  affiliations: Array<{
+    organization: OrganizationRef;
+    role: PersonRole;
+    startYear: number | null;
+    endYear: number | null;
+  }>;
+  publications: PublicationSummary[];
+  patents: PatentSummary[];
 }
