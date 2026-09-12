@@ -29,7 +29,7 @@ import {
   TRIAL_PHASES,
   TRIAL_STATUSES,
   VERIFICATION_STATUSES,
-} from "@/domain/enums";
+} from "../../domain/enums";
 
 /** Postgres enums mirror the domain vocabularies one-to-one. */
 export const entityTypeEnum = pgEnum("entity_type", ENTITY_TYPES);

@@ -2,21 +2,32 @@ import { fileURLToPath } from "node:url";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vitest/config";
 
+const alias = { "@": fileURLToPath(new URL("./src", import.meta.url)) };
+
 export default defineConfig({
   plugins: [react()],
-  resolve: {
-    alias: { "@": fileURLToPath(new URL("./src", import.meta.url)) },
-  },
+  resolve: { alias },
   test: {
     globals: true,
-    include: ["src/**/*.test.{ts,tsx}", "tests/unit/**/*.test.{ts,tsx}", "tests/integration/**/*.test.ts"],
-    exclude: ["node_modules", ".next", "tests/e2e"],
-    environmentMatchGlobs: [
-      ["src/**/*.test.tsx", "jsdom"],
-      ["tests/unit/**/*.test.tsx", "jsdom"],
-    ],
-    environment: "node",
     setupFiles: ["./tests/setup.ts"],
     env: { DATABASE_URL: process.env.TEST_DATABASE_URL ?? "postgres://localhost:5432/neurobase_test" },
+    projects: [
+      {
+        extends: true,
+        test: {
+          name: "node",
+          environment: "node",
+          include: ["src/**/*.test.ts", "tests/unit/**/*.test.ts", "tests/integration/**/*.test.ts"],
+        },
+      },
+      {
+        extends: true,
+        test: {
+          name: "dom",
+          environment: "jsdom",
+          include: ["src/**/*.test.tsx", "tests/unit/**/*.test.tsx"],
+        },
+      },
+    ],
   },
 });
