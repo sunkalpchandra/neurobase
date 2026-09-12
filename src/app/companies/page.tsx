@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { PageProps, rawParams } from "@/app/_lib/page-props";
+import type { PageProps } from "@/app/_lib/page-props";
+import { rawParams } from "@/app/_lib/page-props";
 import { listCompanies } from "@/data/companies";
 import { decodeCursor, encodeCursor } from "@/data/pagination";
 import { COMPANY_SORT_KEYS, type CompanyDirectoryQuery, type CompanySortKey } from "@/data/types";

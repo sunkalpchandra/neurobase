@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { feedbackAction, saveAction } from "@/app/actions/personalization";
-import { PageProps, rawParams } from "@/app/_lib/page-props";
+import type { PageProps } from "@/app/_lib/page-props";
+import { rawParams } from "@/app/_lib/page-props";
 import { loadPersonalizationState } from "@/app/_lib/personalization-state";
 import { EXAMPLE_QUERIES, SearchForm } from "@/app/_lib/search-form";
 import { Section } from "@/app/_lib/section";
