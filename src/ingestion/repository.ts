@@ -1,0 +1,105 @@
+import type {
+  EntityType,
+  EventType,
+  EvidenceStage,
+  IngestionRunStatus,
+  SourceType,
+} from "@/domain/enums";
+import type { ImpactAssessment, ISODate } from "@/domain/types";
+import type { NormalizedRecord } from "./normalized";
+import type { StageCounts } from "./types";
+
+/** Entity references a record resolved to, or null where resolution was not confident. */
+export interface ResolvedLinks {
+  /** Sponsor, assignee, applicant or the organization the record is about. */
+  organizationId: string | null;
+  conditionIds: string[];
+  deviceIds: string[];
+  personIds: string[];
+}
+
+export interface SourceInput {
+  url: string;
+  title: string;
+  sourceType: SourceType;
+  publisher: string;
+  publishedAt: ISODate | null;
+  retrievedAt: Date;
+}
+
+export interface ClaimInput {
+  claimKind: string;
+  statement: string;
+}
+
+export interface EventInput {
+  eventType: EventType;
+  title: string;
+  summary: string;
+  occurredOn: ISODate;
+  dedupeKey: string;
+  evidenceStage: EvidenceStage | null;
+  impact: ImpactAssessment | null;
+}
+
+export interface PublishInput {
+  record: NormalizedRecord;
+  sourceId: string;
+  links: ResolvedLinks;
+  claims: ClaimInput[];
+  event: EventInput | null;
+}
+
+export interface PublishResult {
+  entityType: EntityType;
+  entityId: string;
+  /** True when the row already existed and was refreshed rather than created. */
+  updated: boolean;
+  eventId: string | null;
+}
+
+export interface SimilarOrganization {
+  id: string;
+  name: string;
+  similarity: number;
+}
+
+export interface ReviewInput {
+  runId: string | null;
+  recordKind: string;
+  payload: unknown;
+  reason: string;
+}
+
+/**
+ * Everything the pipeline needs from storage. Stages depend on this interface rather
+ * than on Drizzle, so each one can be exercised against an in-memory fake.
+ */
+export interface IngestionRepository {
+  startRun(adapter: string, query: string): Promise<string>;
+  finishRun(
+    runId: string,
+    status: IngestionRunStatus,
+    stats: StageCounts,
+    error?: string | null,
+  ): Promise<void>;
+
+  /** Exact match against the recorded aliases (already normalised by the caller). */
+  resolveOrganizationByAlias(normalized: string): Promise<string | null>;
+  /** Trigram similarity search over organization names, for near matches. */
+  findSimilarOrganizations(name: string, threshold: number): Promise<SimilarOrganization[]>;
+  resolveConditionByName(name: string): Promise<string | null>;
+  resolveDeviceByName(name: string): Promise<string | null>;
+
+  /** Existing entity id for a record's natural key, or null when it is new. */
+  findExistingByNaturalKey(record: NormalizedRecord): Promise<string | null>;
+  findEventByDedupeKey(dedupeKey: string): Promise<string | null>;
+
+  /** Creates the source row, or refreshes the retrieval date of an existing one. */
+  upsertSource(input: SourceInput): Promise<string>;
+
+  /** Writes the entity, its links, its claims and its development in one transaction. */
+  publish(input: PublishInput): Promise<PublishResult>;
+
+  queueForReview(input: ReviewInput): Promise<void>;
+}
