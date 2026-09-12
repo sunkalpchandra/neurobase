@@ -1,3 +1,4 @@
+import type { Route } from "next";
 import type { EntityType } from "@/domain/enums";
 
 /**
@@ -60,6 +61,17 @@ export function hrefForEntity(entityType: EntityType, key: string): string {
     case "technology_category":
       return `/search?technologyCategories=${encodeURIComponent(key)}`;
   }
+}
+
+/** Narrows a computed path to Next's typed Route for <Link href>. Paths come from `routes`. */
+export function toRoute(path: string): Route {
+  return path as Route;
+}
+
+/** Appends a query string to a path, skipping empty values. */
+export function withQuery(path: string, params: URLSearchParams): string {
+  const qs = params.toString();
+  return qs ? `${path}?${qs}` : path;
 }
 
 export const PRIMARY_NAV = [

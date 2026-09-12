@@ -81,6 +81,10 @@ export interface RelatedEntities {
 
 export interface PersonalizationRepository {
   listSaved(profileId: string): Promise<SavedItem[]>;
+  /** "type:id" keys of every saved entity, for marking Save buttons on lists. */
+  listSavedKeys(profileId: string): Promise<Set<string>>;
+  /** "type:id" keys of every followed target. */
+  listFollowKeys(profileId: string): Promise<Set<string>>;
   isSaved(profileId: string, entityType: EntityType, entityId: string): Promise<boolean>;
   save(
     profileId: string,

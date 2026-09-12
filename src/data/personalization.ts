@@ -42,6 +42,22 @@ export function createPersonalizationRepository(db: Database): PersonalizationRe
       });
     },
 
+    async listSavedKeys(profileId): Promise<Set<string>> {
+      const rows = await db
+        .select({ entityType: schema.savedItems.entityType, entityId: schema.savedItems.entityId })
+        .from(schema.savedItems)
+        .where(eq(schema.savedItems.profileId, profileId));
+      return new Set(rows.map((row) => entityKey(row.entityType, row.entityId)));
+    },
+
+    async listFollowKeys(profileId): Promise<Set<string>> {
+      const rows = await db
+        .select({ targetType: schema.follows.targetType, targetId: schema.follows.targetId })
+        .from(schema.follows)
+        .where(eq(schema.follows.profileId, profileId));
+      return new Set(rows.map((row) => entityKey(row.targetType, row.targetId)));
+    },
+
     async isSaved(profileId, entityType, entityId): Promise<boolean> {
       const [row] = await db
         .select({ id: schema.savedItems.id })
