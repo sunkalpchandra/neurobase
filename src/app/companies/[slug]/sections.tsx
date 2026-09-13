@@ -40,6 +40,7 @@ import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { FormattedDate } from "@/components/ui/formatted-date";
 import { MetadataList } from "@/components/ui/metadata-list";
+import { ExternalLink as SafeExternalLink } from "@/components/ui/external-link";
 import { linkClass, microLabelClass, panelClass } from "@/components/ui/styles";
 import { Timeline } from "@/components/ui/timeline";
 
@@ -55,11 +56,12 @@ const TRIAL_STATUS_VARIANT: Record<TrialStatus, BadgeVariant> = {
   unknown: "neutral",
 };
 
+/** The shared external link with this page's link styling already applied. */
 function ExternalLink({ href, children }: { href: string; children: React.ReactNode }) {
   return (
-    <a href={href} rel="noreferrer" className={linkClass}>
+    <SafeExternalLink href={href} className={linkClass}>
       {children}
-    </a>
+    </SafeExternalLink>
   );
 }
 

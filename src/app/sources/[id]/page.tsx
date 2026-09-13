@@ -22,6 +22,7 @@ import { PageHeader } from "@/components/shell/page-header";
 import { EmptyState } from "@/components/ui/empty-state";
 import { MetadataList } from "@/components/ui/metadata-list";
 import { linkClass, microLabelClass } from "@/components/ui/styles";
+import { ExternalLink } from "@/components/ui/external-link";
 
 export const dynamic = "force-dynamic";
 
@@ -55,9 +56,9 @@ export default async function SourcePage({ params }: PageProps<Params>) {
         eyebrow={`Source · ${SOURCE_TYPE_LABELS[source.sourceType]}`}
         title={source.title}
         description={
-          <a href={source.url} rel="noreferrer" className={`${linkClass} break-all`}>
+          <ExternalLink href={source.url} className={`${linkClass} break-all`}>
             {source.url}
-          </a>
+          </ExternalLink>
         }
         meta={
           <>
@@ -166,9 +167,9 @@ export default async function SourcePage({ params }: PageProps<Params>) {
           <ul className="text-sm">
             {articles.map((article) => (
               <li key={article.id}>
-                <a href={article.url} rel="noreferrer" className={linkClass}>
+                <ExternalLink href={article.url} className={linkClass}>
                   {article.title}
-                </a>
+                </ExternalLink>
                 <span className="text-ink-muted">
                   {" "}
                   · {article.publisher} · {formatDate(article.publishedAt)}

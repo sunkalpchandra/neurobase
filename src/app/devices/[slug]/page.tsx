@@ -30,6 +30,7 @@ import { PageHeader } from "@/components/shell/page-header";
 import { FormattedDate } from "@/components/ui/formatted-date";
 import { MetadataList } from "@/components/ui/metadata-list";
 import { linkClass, microLabelClass } from "@/components/ui/styles";
+import { ExternalLink } from "@/components/ui/external-link";
 
 export const dynamic = "force-dynamic";
 type Params = { slug: string };
@@ -171,9 +172,9 @@ export default async function DevicePage({ params }: PageProps<Params>) {
                         <span className="text-xs text-ink-muted">
                           {" "}
                           ·{" "}
-                          <a href={metric.source.url} rel="noreferrer" className={linkClass}>
+                          <ExternalLink href={metric.source.url} className={linkClass}>
                             {metric.source.publisher ?? "source"}
-                          </a>
+                          </ExternalLink>
                         </span>
                       ) : (
                         <span className="text-xs text-ink-muted"> · no source recorded</span>
@@ -251,9 +252,9 @@ export default async function DevicePage({ params }: PageProps<Params>) {
                     {action.sources[0] ? (
                       <>
                         {" · "}
-                        <a href={action.sources[0].url} rel="noreferrer" className={linkClass}>
+                        <ExternalLink href={action.sources[0].url} className={linkClass}>
                           {action.sources[0].publisher ?? "source"}
-                        </a>
+                        </ExternalLink>
                       </>
                     ) : null}
                   </span>

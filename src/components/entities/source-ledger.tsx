@@ -10,6 +10,7 @@ import { EntityChipList } from "./entity-chip";
 import { SampleDataNotice } from "./sample-data-notice";
 import { SourceTypeLabel } from "./source-type-label";
 import { VerificationLabel } from "./verification-label";
+import { ExternalLink } from "@/components/ui/external-link";
 
 export interface SourceLedgerProps {
   entries: SourceLedgerEntry[];
@@ -24,9 +25,9 @@ const columns: DataTableColumn<SourceLedgerEntry>[] = [
     header: "Source",
     cell: ({ source }) => (
       <div className="flex flex-col gap-0.5">
-        <a href={source.url} rel="noreferrer" className="font-medium hover:underline">
+        <ExternalLink href={source.url} className="font-medium hover:underline">
           {source.title}
-        </a>
+        </ExternalLink>
         <span className="flex flex-wrap items-center gap-2 text-xs">
           <Link href={routes.source(source.id) as Route} className={linkClass}>
             Provenance

@@ -19,6 +19,7 @@ import { VerificationLabel } from "@/components/entities/verification-label";
 import { PageHeader } from "@/components/shell/page-header";
 import { MetadataList } from "@/components/ui/metadata-list";
 import { linkClass } from "@/components/ui/styles";
+import { ExternalLink } from "@/components/ui/external-link";
 
 export const dynamic = "force-dynamic";
 type Params = { id: string };
@@ -61,9 +62,9 @@ export default async function PatentPage({ params }: PageProps<Params>) {
             <span>Filed {formatDate(patent.filingDate)}</span>
             <VerificationLabel status={patent.verificationStatus} />
             {patent.url ? (
-              <a href={patent.url} rel="noreferrer" className={linkClass}>
+              <ExternalLink href={patent.url} className={linkClass}>
                 Original patent record
-              </a>
+              </ExternalLink>
             ) : null}
           </>
         }

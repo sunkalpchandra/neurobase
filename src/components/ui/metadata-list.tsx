@@ -3,6 +3,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { cn } from "@/lib/cn";
 import { linkClass, microLabelClass } from "./styles";
+import { ExternalLink } from "@/components/ui/external-link";
 
 export interface MetadataItem {
   label: ReactNode;
@@ -47,9 +48,9 @@ export function MetadataList({ items, className }: MetadataListProps) {
                 <span className="text-ink-muted">—</span>
               ) : item.href ? (
                 isExternal(item.href) ? (
-                  <a href={item.href} rel="noreferrer" className={linkClass}>
+                  <ExternalLink href={item.href} className={linkClass}>
                     {item.value}
-                  </a>
+                  </ExternalLink>
                 ) : (
                   <Link href={item.href as Route} className={linkClass}>
                     {item.value}

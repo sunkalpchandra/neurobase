@@ -27,6 +27,7 @@ import {
   evidenceSummary,
   TimelineSection,
 } from "./sections";
+import { ExternalLink } from "@/components/ui/external-link";
 
 export const dynamic = "force-dynamic";
 
@@ -110,9 +111,9 @@ export default async function CompanyPage({ params }: PageProps<Params>) {
               {profile.foundedYear ? `Founded ${profile.foundedYear}` : "Founding year unknown"}
             </span>
             {profile.website && website ? (
-              <a href={profile.website} rel="noreferrer" className={linkClass}>
+              <ExternalLink href={profile.website} className={linkClass}>
                 {website}
-              </a>
+              </ExternalLink>
             ) : null}
             {evidence ? <span>Best device evidence: {evidence}</span> : null}
             <span className="flex items-center gap-1">

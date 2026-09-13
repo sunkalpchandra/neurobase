@@ -21,6 +21,7 @@ import { PageHeader } from "@/components/shell/page-header";
 import { Badge, type BadgeVariant } from "@/components/ui/badge";
 import { MetadataList } from "@/components/ui/metadata-list";
 import { linkClass } from "@/components/ui/styles";
+import { ExternalLink } from "@/components/ui/external-link";
 
 export const dynamic = "force-dynamic";
 type Params = { registryId: string };
@@ -73,9 +74,9 @@ export default async function TrialPage({ params }: PageProps<Params>) {
             <span>{TRIAL_PHASE_LABELS[trial.phase]}</span>
             <EvidenceStageLabel stage={trial.evidenceStage} />
             <VerificationLabel status={trial.verificationStatus} />
-            <a href={trial.registryUrl} rel="noreferrer" className={linkClass}>
+            <ExternalLink href={trial.registryUrl} className={linkClass}>
               Original registry record
-            </a>
+            </ExternalLink>
           </>
         }
         actions={

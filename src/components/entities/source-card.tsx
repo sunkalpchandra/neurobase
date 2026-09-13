@@ -9,6 +9,7 @@ import { ConfidenceLabel } from "./confidence-label";
 import { SampleDataNotice } from "./sample-data-notice";
 import { SourceTypeLabel } from "./source-type-label";
 import { VerificationLabel } from "./verification-label";
+import { ExternalLink } from "@/components/ui/external-link";
 
 export interface SourceCardProps {
   source: SourceRecord;
@@ -20,9 +21,9 @@ export function SourceCard({ source, className }: SourceCardProps) {
   return (
     <article className={cn(panelClass, "px-3 py-2", className)}>
       <h3 className="text-sm font-medium">
-        <a href={source.url} rel="noreferrer" className="hover:underline">
+        <ExternalLink href={source.url} className="hover:underline">
           {source.title}
-        </a>
+        </ExternalLink>
       </h3>
       <p className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-ink-muted">
         {source.publisher ? <span>{source.publisher}</span> : null}

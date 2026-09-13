@@ -25,6 +25,7 @@ import { VerificationLabel } from "@/components/entities/verification-label";
 import { PageHeader } from "@/components/shell/page-header";
 import { MetadataList } from "@/components/ui/metadata-list";
 import { linkClass } from "@/components/ui/styles";
+import { ExternalLink } from "@/components/ui/external-link";
 
 export const dynamic = "force-dynamic";
 type Params = { id: string };
@@ -75,13 +76,13 @@ export default async function PublicationPage({ params }: PageProps<Params>) {
             <EvidenceStageLabel stage={publication.evidenceStage} />
             <VerificationLabel status={publication.verificationStatus} />
             {citation ? (
-              <a href={citation} rel="noreferrer" className={linkClass}>
+              <ExternalLink href={citation} className={linkClass}>
                 {publication.doi ? (
                   <span className="font-mono">{publication.doi}</span>
                 ) : (
                   "Full text"
                 )}
-              </a>
+              </ExternalLink>
             ) : null}
           </>
         }
