@@ -32,7 +32,13 @@ export const organizations = pgTable(
     id: uuid("id").primaryKey().defaultRandom(),
     slug: text("slug").notNull(),
     name: text("name").notNull(),
-    kind: organizationKindEnum("kind").notNull(),
+    /**
+     * Nullable on purpose. Most records that name an organization do not say what kind
+     * of body it is: a paper's affiliation could be a university, a hospital or a
+     * company. A default here would be shown as a fact — "Aalborg University Hospital,
+     * Company" is a factual error where an em dash is the truth.
+     */
+    kind: organizationKindEnum("kind"),
     description: text("description").notNull().default(""),
     website: text("website"),
     hqCity: text("hq_city"),

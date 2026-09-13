@@ -36,6 +36,13 @@
       "when": 1789274359702,
       "tag": "0004_device_classification_nullable",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1789282696250,
+      "tag": "0005_broad_lady_ursula",
+      "breakpoints": true
     }
   ]
 }
