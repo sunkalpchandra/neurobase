@@ -14,6 +14,7 @@ import {
 import type { DeviceSummary } from "@/domain/types";
 import { ValidationError } from "@/lib/errors";
 import { pluralize } from "@/lib/format";
+import { labelOr } from "@/lib/labels";
 import { routes, toRoute, withQuery } from "@/lib/routes";
 import { parseListQuery, toSearchParams } from "@/lib/validation";
 import { EvidenceStageLabel } from "@/components/entities/evidence-stage-label";
@@ -58,14 +59,18 @@ const columns: DataTableColumn<DeviceSummary>[] = [
   {
     key: "interface",
     header: "Interface",
-    cell: (device) => INTERFACE_TYPE_LABELS[device.interfaceType],
+    cell: (device) => labelOr(INTERFACE_TYPE_LABELS, device.interfaceType),
   },
   {
     key: "invasiveness",
     header: "Invasiveness",
-    cell: (device) => INVASIVENESS_LABELS[device.invasiveness],
+    cell: (device) => labelOr(INVASIVENESS_LABELS, device.invasiveness),
   },
-  { key: "modality", header: "Modality", cell: (device) => MODALITY_LABELS[device.modality] },
+  {
+    key: "modality",
+    header: "Modality",
+    cell: (device) => labelOr(MODALITY_LABELS, device.modality),
+  },
   {
     key: "conditions",
     header: "Target conditions",
@@ -74,7 +79,7 @@ const columns: DataTableColumn<DeviceSummary>[] = [
   {
     key: "stage",
     header: "Stage",
-    cell: (device) => DEVELOPMENT_STAGE_LABELS[device.developmentStage],
+    cell: (device) => labelOr(DEVELOPMENT_STAGE_LABELS, device.developmentStage),
   },
   {
     key: "evidence",

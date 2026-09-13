@@ -19,6 +19,7 @@ import {
   REGULATORY_ACTION_TYPE_LABELS,
   TRIAL_STATUS_LABELS,
 } from "@/domain/enums";
+import { labelOr } from "@/lib/labels";
 import { formatDate, pluralize } from "@/lib/format";
 import { routes, toRoute } from "@/lib/routes";
 import { EvidenceStageLabel } from "@/components/entities/evidence-stage-label";
@@ -65,9 +66,9 @@ export default async function DevicePage({ params }: PageProps<Params>) {
             ) : (
               <span>Developer unknown</span>
             )}
-            <span>{INTERFACE_TYPE_LABELS[device.interfaceType]}</span>
-            <span>{INVASIVENESS_LABELS[device.invasiveness]}</span>
-            <span>{DEVELOPMENT_STAGE_LABELS[device.developmentStage]}</span>
+            <span>{labelOr(INTERFACE_TYPE_LABELS, device.interfaceType)}</span>
+            <span>{labelOr(INVASIVENESS_LABELS, device.invasiveness)}</span>
+            <span>{labelOr(DEVELOPMENT_STAGE_LABELS, device.developmentStage)}</span>
             <EvidenceStageLabel stage={device.evidenceStage} />
             <VerificationLabel status={device.verificationStatus} />
             <span>Last verified {formatDate(device.lastVerifiedAt)}</span>
@@ -98,13 +99,19 @@ export default async function DevicePage({ params }: PageProps<Params>) {
             items={[
               { label: "Intended function", value: device.intendedFunction || "—" },
               { label: "Neural target", value: device.neuralTarget || "—" },
-              { label: "Interface type", value: INTERFACE_TYPE_LABELS[device.interfaceType] },
-              { label: "Invasiveness", value: INVASIVENESS_LABELS[device.invasiveness] },
-              { label: "Recording or stimulation", value: MODALITY_LABELS[device.modality] },
+              {
+                label: "Interface type",
+                value: labelOr(INTERFACE_TYPE_LABELS, device.interfaceType),
+              },
+              { label: "Invasiveness", value: labelOr(INVASIVENESS_LABELS, device.invasiveness) },
+              {
+                label: "Recording or stimulation",
+                value: labelOr(MODALITY_LABELS, device.modality),
+              },
               { label: "Intended users", value: device.intendedUsers || "—" },
               {
                 label: "Development stage",
-                value: DEVELOPMENT_STAGE_LABELS[device.developmentStage],
+                value: labelOr(DEVELOPMENT_STAGE_LABELS, device.developmentStage),
               },
               {
                 label: "Target conditions",

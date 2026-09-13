@@ -67,7 +67,10 @@ export async function buildDeviceDocuments(ctx: IndexContext): Promise<SearchDoc
     const categoryRefs = unique(
       (categoriesByDevice.get(device.id) ?? []).map((link) => categories.get(link.categoryId)),
     );
-    const interfaceLabel = INTERFACE_TYPE_LABELS[device.interfaceType];
+    // Null where no record classifies the device; metadataPairs drops absent values.
+    const interfaceLabel = device.interfaceType
+      ? INTERFACE_TYPE_LABELS[device.interfaceType]
+      : null;
     const conditionNames = conditionRefs.map((ref) => ref.name);
     const categoryNames = categoryRefs.map((ref) => ref.name);
     const sourceTypes = sourceTypesFor(claimSources.get(device.id));
@@ -88,10 +91,13 @@ export async function buildDeviceDocuments(ctx: IndexContext): Promise<SearchDoc
       ]),
       metadata: metadataPairs([
         ["Interface", interfaceLabel],
-        ["Invasiveness", INVASIVENESS_LABELS[device.invasiveness]],
-        ["Modality", MODALITY_LABELS[device.modality]],
-        ["Stage", DEVELOPMENT_STAGE_LABELS[device.developmentStage]],
-        ["Evidence", EVIDENCE_STAGE_LABELS[device.evidenceStage]],
+        ["Invasiveness", device.invasiveness ? INVASIVENESS_LABELS[device.invasiveness] : null],
+        ["Modality", device.modality ? MODALITY_LABELS[device.modality] : null],
+        [
+          "Stage",
+          device.developmentStage ? DEVELOPMENT_STAGE_LABELS[device.developmentStage] : null,
+        ],
+        ["Evidence", device.evidenceStage ? EVIDENCE_STAGE_LABELS[device.evidenceStage] : null],
       ]),
       entities: [
         ...(developer

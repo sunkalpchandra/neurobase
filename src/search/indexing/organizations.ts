@@ -100,7 +100,9 @@ export async function buildOrganizationDocuments(ctx: IndexContext): Promise<Sea
     const categoryNames = categoryRefs.map((ref) => ref.name);
     const conditionNames = conditionRefs.map((ref) => ref.name);
     const interfaceLabels = unique(
-      orgDevices.map((device) => INTERFACE_TYPE_LABELS[device.interfaceType]),
+      orgDevices.map((device) =>
+        device.interfaceType ? INTERFACE_TYPE_LABELS[device.interfaceType] : null,
+      ),
     );
     const location = locationLabel(org.hqCity, org.hqCountry);
     const sourceTypes = sourceTypesFor(claimSources.get(org.id));

@@ -312,14 +312,13 @@ export function createDrizzleRepository(db: Database): IngestionRepository {
             name: input.name,
             developerOrganizationId: input.developerOrganizationId,
             description: input.description,
-            // Nothing beyond the name is stated by a clearance or an intervention, so
-            // every classified field stays at its least-committal value until a record
-            // supports something narrower. "other" and "research" mean "not yet known".
-            interfaceType: "other",
-            invasiveness: "noninvasive",
-            modality: "stimulation",
-            developmentStage: "research",
-            evidenceStage: "concept",
+            // A clearance or an intervention names the device and says nothing else about
+            // it, so every classified field stays null rather than being guessed.
+            interfaceType: null,
+            invasiveness: null,
+            modality: null,
+            developmentStage: null,
+            evidenceStage: null,
             ...INGESTED_PROVENANCE,
             confidence: "low" as const,
           })

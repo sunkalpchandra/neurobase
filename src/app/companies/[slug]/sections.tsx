@@ -30,6 +30,7 @@ import type {
   RegulatoryActionSummary,
 } from "@/domain/types";
 import { formatInteger, formatUsd, formatUsdCompact, pluralize } from "@/lib/format";
+import { labelOr } from "@/lib/labels";
 import { routes, toRoute } from "@/lib/routes";
 import { EvidenceStageLabel } from "@/components/entities/evidence-stage-label";
 import { SourceLedger } from "@/components/entities/source-ledger";
@@ -258,13 +259,22 @@ export function TechnologySection({ devices }: { devices: DeviceDetail[] }) {
                   items={[
                     { label: "Intended function", value: device.intendedFunction || "—" },
                     { label: "Neural target", value: device.neuralTarget || "—" },
-                    { label: "Interface type", value: INTERFACE_TYPE_LABELS[device.interfaceType] },
-                    { label: "Invasiveness", value: INVASIVENESS_LABELS[device.invasiveness] },
-                    { label: "Recording or stimulation", value: MODALITY_LABELS[device.modality] },
+                    {
+                      label: "Interface type",
+                      value: labelOr(INTERFACE_TYPE_LABELS, device.interfaceType),
+                    },
+                    {
+                      label: "Invasiveness",
+                      value: labelOr(INVASIVENESS_LABELS, device.invasiveness),
+                    },
+                    {
+                      label: "Recording or stimulation",
+                      value: labelOr(MODALITY_LABELS, device.modality),
+                    },
                     { label: "Intended users", value: device.intendedUsers || "—" },
                     {
                       label: "Development stage",
-                      value: DEVELOPMENT_STAGE_LABELS[device.developmentStage],
+                      value: labelOr(DEVELOPMENT_STAGE_LABELS, device.developmentStage),
                     },
                     {
                       label: "Target conditions",
@@ -785,8 +795,11 @@ export function SourcesSection({ profile }: { profile: CompanyProfile }) {
   );
 }
 
+/** The furthest evidence stage among a company's devices, or null when none is recorded. */
 export function evidenceSummary(profile: CompanyProfile): string | null {
-  const stages = profile.devices.map((device) => device.evidenceStage);
+  const stages = profile.devices.flatMap((device) =>
+    device.evidenceStage ? [device.evidenceStage] : [],
+  );
   if (!stages.length) return null;
   const best = stages.reduce((a, b) => (evidenceStageNumber(a) >= evidenceStageNumber(b) ? a : b));
   return `Stage ${evidenceStageNumber(best)} · ${EVIDENCE_STAGE_LABELS[best]}`;
