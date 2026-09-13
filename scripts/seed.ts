@@ -9,11 +9,14 @@ import { getEmbeddingsProvider } from "../src/search/embeddings";
 import { createSearchIndexer } from "../src/search/indexer";
 
 /**
- * Replaces the development sample in the target database, then rebuilds the search
- * index. Rows that are not part of the sample (ingested records, user profiles) are
- * left alone, except taxonomy rows that the sample re-creates by id.
+ * Loads the generated test fixtures into a database and rebuilds the search index.
  *
- *   npm run db:seed -- --scale 1 --seed 20260912 [--skip-index]
+ * This is for exercising the interface against a large dataset without a network call.
+ * It is NOT how NeuroBase gets its records: run `npm run corpus` for that. Fixture rows
+ * are marked `is_sample = true`, are removed and rewritten on each run, and never touch
+ * ingested records.
+ *
+ *   npm run db:fixtures -- --scale 1 --seed 20260912 [--skip-index]
  */
 const { values } = parseArgs({
   options: {
