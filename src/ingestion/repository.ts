@@ -3,6 +3,7 @@ import type {
   EventType,
   EvidenceStage,
   IngestionRunStatus,
+  OrganizationKind,
   SourceType,
 } from "@/domain/enums";
 import type { ImpactAssessment, ISODate } from "@/domain/types";
@@ -13,6 +14,8 @@ import type { StageCounts } from "./types";
 export interface ResolvedLinks {
   /** Sponsor, assignee, applicant or the organization the record is about. */
   organizationId: string | null;
+  /** Every organization the record names, including the primary one. */
+  relatedOrganizationIds: string[];
   conditionIds: string[];
   deviceIds: string[];
   personIds: string[];
@@ -58,6 +61,16 @@ export interface PublishResult {
   eventId: string | null;
 }
 
+export interface EnsureOrganizationInput {
+  name: string;
+  kind: OrganizationKind;
+  /** ISO 3166-1 alpha-2, when the upstream record states one. */
+  country: string | null;
+  /** The record that named it; becomes the organization's first source. */
+  sourceId: string;
+  description: string;
+}
+
 export interface SimilarOrganization {
   id: string;
   name: string;
@@ -97,6 +110,13 @@ export interface IngestionRepository {
 
   /** Creates the source row, or refreshes the retrieval date of an existing one. */
   upsertSource(input: SourceInput): Promise<string>;
+
+  /**
+   * Records an organization a trusted source named — a registry sponsor, an FDA
+   * applicant, an indexed affiliation. Returns the existing row when the name is
+   * already known, so repeated runs converge instead of duplicating.
+   */
+  ensureOrganization(input: EnsureOrganizationInput): Promise<string>;
 
   /** Writes the entity, its links, its claims and its development in one transaction. */
   publish(input: PublishInput): Promise<PublishResult>;

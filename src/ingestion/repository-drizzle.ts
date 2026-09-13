@@ -91,6 +91,19 @@ export function createDrizzleRepository(db: Database): IngestionRepository {
     },
 
     async resolveConditionByName(name) {
+      // Registries spell the same indication many ways, so the recorded synonyms are
+      // tried before the canonical name and the slug.
+      const [byAlias] = await db
+        .select({ entityId: schema.entityAliases.entityId })
+        .from(schema.entityAliases)
+        .where(
+          and(
+            eq(schema.entityAliases.entityType, "condition"),
+            eq(schema.entityAliases.normalized, normalizeForMatch(name)),
+          ),
+        )
+        .limit(1);
+      if (byAlias) return byAlias.entityId;
       const [row] = await db
         .select({ id: schema.conditions.id })
         .from(schema.conditions)
@@ -213,6 +226,56 @@ export function createDrizzleRepository(db: Database): IngestionRepository {
         .returning({ id: schema.sources.id });
       if (!row) throw new Error(`Failed to store the source ${input.url}`);
       return row.id;
+    },
+
+    async ensureOrganization(input) {
+      const slug = slugify(input.name).slice(0, 90);
+      if (!slug) throw new Error(`Cannot record an organization named "${input.name}"`);
+      return db.transaction(async (tx) => {
+        const normalized = normalizeForMatch(input.name);
+        const [byAlias] = await tx
+          .select({ entityId: schema.entityAliases.entityId })
+          .from(schema.entityAliases)
+          .where(
+            and(
+              eq(schema.entityAliases.entityType, "organization"),
+              eq(schema.entityAliases.normalized, normalized),
+            ),
+          )
+          .limit(1);
+        if (byAlias) return byAlias.entityId;
+
+        const [row] = await tx
+          .insert(schema.organizations)
+          .values({
+            slug,
+            name: input.name,
+            kind: input.kind,
+            description: input.description,
+            ...INGESTED_PROVENANCE,
+          })
+          .onConflictDoUpdate({ target: schema.organizations.slug, set: { updatedAt: new Date() } })
+          .returning({ id: schema.organizations.id });
+        if (!row) throw new Error(`Failed to record the organization ${input.name}`);
+        await recordAliases(tx, row.id, [input.name]);
+        const [claimRow] = await tx
+          .insert(schema.claims)
+          .values({
+            entityType: "organization",
+            entityId: row.id,
+            claimKind: "organization_record",
+            statement: input.description,
+            ...INGESTED_PROVENANCE,
+          })
+          .returning({ id: schema.claims.id });
+        if (claimRow) {
+          await tx
+            .insert(schema.claimSources)
+            .values({ claimId: claimRow.id, sourceId: input.sourceId })
+            .onConflictDoNothing();
+        }
+        return row.id;
+      });
     },
 
     async publish(input: PublishInput): Promise<PublishResult> {
@@ -408,6 +471,7 @@ async function upsertEntity(
         publishedOn: record.publishedOn,
         year: record.year,
         url: record.url,
+        topics: record.topics,
         // Evidence stage is an editorial judgement about the study; ingestion records
         // the weakest defensible stage rather than inferring one from the abstract.
         evidenceStage: "laboratory" as const,
@@ -559,7 +623,7 @@ async function upsertEntity(
       const values = {
         slug,
         name: record.name,
-        kind: "company" as const,
+        kind: record.organizationKind,
         description: record.description,
         website: record.website,
         hqCountry: record.country,
@@ -570,21 +634,32 @@ async function upsertEntity(
         .values(values)
         .onConflictDoUpdate({
           target: schema.organizations.slug,
-          set: { description: record.description, updatedAt: new Date() },
+          set: {
+            description: record.description,
+            website: record.website,
+            hqCountry: record.country,
+            updatedAt: new Date(),
+          },
         })
         .returning({ id: schema.organizations.id });
       if (!row) throw new Error(`Failed to store organization ${record.name}`);
-      await tx
-        .insert(schema.entityAliases)
-        .values({
-          entityType: "organization",
-          entityId: row.id,
-          alias: record.name,
-          normalized: normalizeForMatch(record.name),
-        })
-        .onConflictDoNothing();
+      await recordAliases(tx, row.id, [record.name, ...record.aliases]);
       return { entityId: row.id, updated: false };
     }
+  }
+}
+
+/** Stores every name an organization is known by, so later records resolve to it. */
+async function recordAliases(tx: Tx, organizationId: string, names: string[]): Promise<void> {
+  const seen = new Set<string>();
+  for (const name of names) {
+    const normalized = normalizeForMatch(name);
+    if (!normalized || seen.has(normalized)) continue;
+    seen.add(normalized);
+    await tx
+      .insert(schema.entityAliases)
+      .values({ entityType: "organization", entityId: organizationId, alias: name, normalized })
+      .onConflictDoNothing();
   }
 }
 

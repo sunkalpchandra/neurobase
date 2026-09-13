@@ -24,6 +24,8 @@ export interface MemoryRepositorySeed {
 }
 
 export interface MemoryRepository extends IngestionRepository {
+  /** Organizations created from authoritative mentions, keyed by lower-cased name. */
+  readonly createdOrganizations: Map<string, string>;
   readonly published: PublishInput[];
   readonly reviewed: ReviewInput[];
   readonly sources: SourceInput[];
@@ -61,6 +63,7 @@ export function createMemoryRepository(seed: MemoryRepositorySeed = {}): MemoryR
   const runs: MemoryRepository["runs"] = [];
   const existing = new Set(seed.existing ?? []);
   const events = new Map<string, string>();
+  const createdOrganizations = new Map<string, string>();
   let counter = 0;
   const nextId = (prefix: string) => `${prefix}-${(counter += 1)}`;
 
@@ -69,6 +72,7 @@ export function createMemoryRepository(seed: MemoryRepositorySeed = {}): MemoryR
     reviewed,
     sources,
     runs,
+    createdOrganizations,
 
     async startRun(adapter, query) {
       const id = nextId("run");
@@ -108,6 +112,14 @@ export function createMemoryRepository(seed: MemoryRepositorySeed = {}): MemoryR
     async upsertSource(input) {
       sources.push(input);
       return nextId("source");
+    },
+    async ensureOrganization(input) {
+      const key = input.name.toLowerCase();
+      const existing = createdOrganizations.get(key);
+      if (existing) return existing;
+      const id = nextId("org");
+      createdOrganizations.set(key, id);
+      return id;
     },
     async publish(input): Promise<PublishResult> {
       published.push(input);
