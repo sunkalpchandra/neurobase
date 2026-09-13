@@ -67,6 +67,12 @@ export interface HttpClientOptions {
   maxRetries?: number;
   /** First backoff step; doubles per retry when the server gives no Retry-After. */
   baseBackoffMs?: number;
+  /**
+   * Longest wait to honour before abandoning the request. A Retry-After beyond this is
+   * a sustained block, not a moment's congestion: waiting it out would stall a batch
+   * run for minutes, and the next scheduled refresh will pick the records up instead.
+   */
+  maxWaitMs?: number;
   /** Injected in tests; defaults to global fetch. */
   fetchImpl?: typeof fetch;
   sleep?: (ms: number) => Promise<void>;
@@ -119,6 +125,7 @@ export function createHttpClient(options: HttpClientOptions): HttpClient {
     timeoutMs = 15_000,
     maxRetries = 3,
     baseBackoffMs = 250,
+    maxWaitMs = 30_000,
     fetchImpl = fetch,
     sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms)),
   } = options;
@@ -183,7 +190,9 @@ export function createHttpClient(options: HttpClientOptions): HttpClient {
           if (!retryable || retry === maxRetries || init?.signal?.aborted) break;
           // A server that says how long to wait knows better than our backoff curve.
           const askedFor = error instanceof HttpError ? error.retryAfterSeconds : null;
-          await sleep(askedFor !== null ? askedFor * 1000 : 2 ** retry * baseBackoffMs);
+          const wait = askedFor !== null ? askedFor * 1000 : 2 ** retry * baseBackoffMs;
+          if (wait > maxWaitMs) break;
+          await sleep(wait);
         }
       }
       throw lastError instanceof Error ? lastError : new Error(String(lastError));
