@@ -14,6 +14,7 @@ export const routes = {
     const qs = search.toString();
     return qs ? `/search?${qs}` : "/search";
   },
+  ask: (question?: string) => (question ? `/ask?q=${encodeURIComponent(question)}` : "/ask"),
   companies: () => "/companies",
   company: (slug: string) => `/companies/${encodeURIComponent(slug)}`,
   research: () => "/research",
@@ -77,6 +78,7 @@ export function withQuery(path: string, params: URLSearchParams): string {
 export const PRIMARY_NAV = [
   { label: "Home", href: "/" },
   { label: "Search", href: "/search" },
+  { label: "Ask", href: "/ask" },
   { label: "Companies", href: "/companies" },
   { label: "Research", href: "/research" },
   { label: "Clinical trials", href: "/trials" },
