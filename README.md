@@ -102,7 +102,20 @@ reviews them, and `is_sample = false`.
 An organization is recorded only when an authoritative source names it — a registry
 sponsor, an FDA applicant, an indexed affiliation — and is typed as what that source
 says it is. Names that cannot be resolved confidently go to `review_queue` instead of
-being guessed, which is why a record can show an em dash where a link would be.
+being guessed, which is why a record can show an em dash where a link would be. A sponsor
+that is an individual investigator rather than an institution is queued, not recorded as
+a company.
+
+A device is recorded when an FDA clearance or a registry intervention names it, but a
+clearance says only what the device is called. Its interface type, invasiveness, modality
+and stages stay **null** until a record classifies them, and the interface shows an em
+dash: a cochlear electrode displayed as "noninvasive" because that was a column default
+would be a factual error.
+
+Technology categories and conditions are attached from a record's own text, matched
+against the vocabulary and its synonyms — a trial whose title says "deep brain
+stimulation" is about deep brain stimulation. A record that merely turned up in a search
+for a term is not classified by that term.
 
 The controlled vocabulary in `src/db/reference/taxonomy.ts` is reference data, not
 ingested data: the technology categories and medical indications the product facets by,
