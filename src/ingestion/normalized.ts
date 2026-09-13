@@ -1,5 +1,6 @@
 import { z } from "zod";
 import {
+  ORGANIZATION_KINDS,
   PATENT_STATUSES,
   PUBLICATION_TYPES,
   REGULATORY_ACTION_TYPES,
@@ -30,6 +31,17 @@ const provenance = z.object({
   retrievedAt: z.date(),
 });
 
+/**
+ * Organizations the upstream record names with a type of their own — an OpenAlex
+ * institution, an FDA applicant. Richer than a bare name, so the organization is
+ * recorded as what it actually is rather than guessed from the record kind.
+ */
+const affiliation = z.object({
+  name: z.string().min(1),
+  kind: z.enum(ORGANIZATION_KINDS).default("company"),
+  country: z.string().length(2).nullable().default(null),
+});
+
 /** Organizations and people mentioned by name; resolution happens in a later stage. */
 const mentions = z.object({
   organizationNames: z.array(z.string().min(1)).default([]),
@@ -45,6 +57,8 @@ const base = provenance.extend({
     conditionNames: [],
     deviceNames: [],
   }),
+  /** Typed affiliations; preferred over mentions.organizationNames when present. */
+  affiliations: z.array(affiliation).default([]),
 });
 
 export const clinicalTrialRecordSchema = base.extend({
@@ -80,6 +94,8 @@ export const publicationRecordSchema = base.extend({
   publishedOn: isoDate.default(null),
   year: z.number().int().min(1800).max(2200).nullable().default(null),
   authorNames: z.array(z.string().min(1)).default([]),
+  /** Research areas the upstream catalogue assigned; indexed as search keywords. */
+  topics: z.array(z.string().min(1)).default([]),
 });
 
 export const patentRecordSchema = base.extend({
@@ -121,6 +137,10 @@ export const organizationRecordSchema = base.extend({
   description: z.string().default(""),
   website: z.string().url().nullable().default(null),
   country: z.string().length(2).nullable().default(null),
+  /** What the upstream record says the organization is; defaults to company. */
+  organizationKind: z.enum(ORGANIZATION_KINDS).default("company"),
+  /** Alternative names the upstream record lists, recorded for entity resolution. */
+  aliases: z.array(z.string().min(1)).default([]),
 });
 
 export const normalizedRecordSchema = z.discriminatedUnion("kind", [
