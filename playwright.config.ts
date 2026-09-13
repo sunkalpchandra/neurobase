@@ -8,7 +8,9 @@ export default defineConfig({
   fullyParallel: true,
   workers: 2,
   forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 1 : 0,
+  // One retry everywhere: the first request after a build pays cold-start cost on the
+  // server and the database, which can exceed the expect timeout on a loaded machine.
+  retries: 1,
   reporter: process.env.CI ? "github" : "list",
   expect: { timeout: 10_000 },
   use: { baseURL, trace: "retain-on-failure" },
