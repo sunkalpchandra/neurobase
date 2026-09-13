@@ -3,6 +3,7 @@ import { parseArgs } from "node:util";
 import { closeDb, getDb } from "../src/db/client";
 import { findAdapter } from "../src/ingestion/adapters";
 import { runPipeline } from "../src/ingestion/pipeline";
+import { linkStoredRecords } from "../src/ingestion/classify-stored";
 import { createDrizzleRepository } from "../src/ingestion/repository-drizzle";
 import { getEmbeddingsProvider } from "../src/search/embeddings";
 import { createSearchIndexer } from "../src/search/indexer";
@@ -102,6 +103,7 @@ function addCounts(total: StageCounts, next: StageCounts): StageCounts {
     duplicates: total.duplicates + next.duplicates,
     unresolved: total.unresolved + next.unresolved,
     organizations: total.organizations + next.organizations,
+    devices: total.devices + next.devices,
     published: total.published + next.published,
     queued: total.queued + next.queued,
   };
@@ -130,6 +132,7 @@ async function main(): Promise<void> {
     duplicates: 0,
     unresolved: 0,
     organizations: 0,
+    devices: 0,
     published: 0,
     queued: 0,
   };
@@ -167,6 +170,13 @@ async function main(): Promise<void> {
     console.log(`  ${stage.padEnd(14)} ${String(count).padStart(6)}`);
   }
   if (failures) console.log(`  ${"failed queries".padEnd(14)} ${String(failures).padStart(6)}`);
+
+  // Category, condition and indication links are derived from the records just stored,
+  // so this runs after ingestion and before the index is rebuilt.
+  const links = await linkStoredRecords(db);
+  console.log(
+    `\nLinked ${links.categories.organizationsLinked} organization and ${links.categories.devicesLinked} device categories across ${links.categories.categoriesUsed} categories, ${links.deviceConditions} device conditions, ${links.primaryIndications} primary indications.`,
+  );
 
   if (values["skip-index"]) {
     console.log("\nSearch index not rebuilt (--skip-index).");
