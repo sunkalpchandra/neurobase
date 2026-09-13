@@ -9,9 +9,17 @@ test.describe("empty, error and not-found states", () => {
   });
 
   test("unknown records answer 404", async ({ page }) => {
-    // /companies/[slug] is excluded: see "Known issues" in the README — Next streams that
-    // route's shell before notFound() resolves, so its status is pinned at 200.
-    for (const path of ["/devices/nope", "/trials/NOTREAL", "/news/nope", "/researchers/nobody"]) {
+    // /companies/[slug] is in this list deliberately. A segment-level loading.tsx used to
+    // sit at companies/, wrapping the detail route in a Suspense boundary that flushed the
+    // shell — and the 200 — before notFound() ran. The boundary now lives in a (list) route
+    // group; this asserts it stays there.
+    for (const path of [
+      "/companies/nope",
+      "/devices/nope",
+      "/trials/NOTREAL",
+      "/news/nope",
+      "/researchers/nobody",
+    ]) {
       const response = await page.goto(path);
       expect(response?.status(), path).toBe(404);
     }
