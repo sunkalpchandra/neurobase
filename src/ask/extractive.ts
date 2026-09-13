@@ -59,10 +59,18 @@ export function buildExtractiveAnswer(
     };
   }
 
+  // A development that only announces a record already listed repeats it, so the entity
+  // is shown once and the development is dropped from the grouping.
+  const titlesShown = new Set(
+    results
+      .filter((result) => result.entityType !== "event")
+      .map((result) => result.title.toLowerCase()),
+  );
   const byType = new Map<EntityType, Array<{ result: SearchResult; citation: AskCitation }>>();
   results.forEach((result, index) => {
     const citation = citations[index];
     if (!citation) return;
+    if (result.entityType === "event" && titlesShown.has(result.title.toLowerCase())) return;
     const bucket = byType.get(result.entityType) ?? [];
     bucket.push({ result, citation });
     byType.set(result.entityType, bucket);
