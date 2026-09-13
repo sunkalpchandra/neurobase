@@ -16,7 +16,7 @@ test("saving a development from the feed lists it on the saved page", async ({ p
 
 test("following a company yields recommendations with a reason", async ({ page }) => {
   await page.goto("/companies");
-  const companyLink = page.locator("main a[href^='/companies/']").first();
+  const companyLink = page.locator("main a[href^='/companies/']:visible").first();
   await companyLink.click();
   await expect(page).toHaveURL(/\/companies\//);
   const follow = page.getByRole("button", { name: /^Follow/ });

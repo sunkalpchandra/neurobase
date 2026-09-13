@@ -14,7 +14,7 @@ test("feed → search → company → profile → source", async ({ page }) => {
   await expect(page.getByText("Development sample").first()).toBeVisible();
   await expectNoHorizontalOverflow(page);
 
-  const searchBox = page.getByRole("search").first().getByRole("searchbox");
+  const searchBox = page.getByRole("searchbox", { name: "Search the database" });
   await searchBox.fill("companies working on peripheral nerve stimulation");
   await searchBox.press("Enter");
   await expect(page).toHaveURL(/\/search\?q=/);
