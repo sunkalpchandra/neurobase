@@ -140,7 +140,14 @@ describe("adapter registry", () => {
         .filter((adapter) => adapter.status === "available")
         .map((adapter) => adapter.id)
         .sort(),
-    ).toEqual(["clinicaltrials", "crossref", "openfda", "pubmed"]);
+    ).toEqual([
+      "clinicaltrials",
+      "crossref",
+      "openalex",
+      "openalex-institutions",
+      "openfda",
+      "pubmed",
+    ]);
   });
 
   it("refuses to run a planned adapter and says why", async () => {

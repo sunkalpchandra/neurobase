@@ -37,6 +37,7 @@ function trialRecord(overrides: Partial<Record<string, unknown>> = {}): Normaliz
     completionIsEstimate: true,
     sponsorName: "Kestrel Neurotech",
     registryUpdatedOn: "2026-02-01",
+    affiliations: [],
     mentions: {
       organizationNames: ["Kestrel Neurotech"],
       personNames: [],
@@ -108,6 +109,7 @@ describe("entity extraction and resolution", () => {
     const outcome = await resolveEntities(repository, extractEntities(trialRecord()));
     expect(outcome.links).toEqual({
       organizationId: "org-1",
+      relatedOrganizationIds: [],
       conditionIds: ["cond-1"],
       deviceIds: ["dev-1"],
       personIds: [],
@@ -196,6 +198,7 @@ describe("claims and dedupe keys", () => {
       title,
       summary: "",
       publishedAtTimestamp: new Date("2026-03-01T00:00:00Z"),
+      affiliations: [],
       mentions: { organizationNames: [], personNames: [], conditionNames: [], deviceNames: [] },
     });
     expect(eventDedupeKey(article("Kestrel Neurotech raises Series B funding"))).toBe(
@@ -413,5 +416,46 @@ describe("http client", () => {
     await bucket.take();
     await bucket.take();
     expect(slept.length).toBeGreaterThan(0);
+  });
+});
+
+describe("retry-after handling", () => {
+  it("waits exactly as long as the server asked", async () => {
+    const { parseRetryAfter } = await import("@/ingestion/http");
+    expect(parseRetryAfter("30")).toBe(30);
+    expect(parseRetryAfter("0")).toBe(0);
+    expect(parseRetryAfter(null)).toBeNull();
+    expect(parseRetryAfter("not-a-delay")).toBeNull();
+    // An HTTP date is converted to a delay from now.
+    const now = Date.parse("2026-09-13T00:00:00Z");
+    expect(parseRetryAfter("Sun, 13 Sep 2026 00:00:45 GMT", now)).toBe(45);
+    // A date in the past means retry immediately, and long waits are capped.
+    expect(parseRetryAfter("Sun, 13 Sep 2026 00:00:00 GMT", now + 10_000)).toBe(0);
+    expect(parseRetryAfter("100000")).toBe(120);
+  });
+
+  it("sleeps for the Retry-After delay rather than its own backoff", async () => {
+    const { createHttpClient } = await import("@/ingestion/http");
+    const { z } = await import("zod");
+    const slept: number[] = [];
+    const fetchImpl = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(new Response("", { status: 429, headers: { "retry-after": "7" } }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ ok: true }), { status: 200 }));
+    const client = createHttpClient({
+      requestsPerSecond: 1000,
+      fetchImpl,
+      sleep: async (ms) => {
+        slept.push(ms);
+      },
+      maxRetries: 2,
+      baseBackoffMs: 250,
+    });
+    await expect(
+      client.getJson("https://example.invalid/x", z.object({ ok: z.boolean() })),
+    ).resolves.toEqual({
+      ok: true,
+    });
+    expect(slept).toContain(7000);
   });
 });
