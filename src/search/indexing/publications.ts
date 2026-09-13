@@ -148,6 +148,7 @@ export async function buildPublicationDocuments(ctx: IndexContext): Promise<Sear
         publication.doi,
         publication.pmid,
         publication.journal,
+        ...publication.topics,
         PUBLICATION_TYPE_LABELS[publication.publicationType],
         studyType,
         ...authors.map((author) => author.fullName),
