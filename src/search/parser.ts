@@ -182,8 +182,39 @@ export function parseQuery(input: string): ParsedQuery {
     expansions,
     interpreted: collectInterpreted(segments),
     tsquery: buildTsQuery(expansions, "and"),
+    literalExpansions: literalGroups(segments, phrases),
     phrases,
   };
+}
+
+/**
+ * Every word the visitor typed as a plain content term, facet words included.
+ *
+ * A word read as a facet is dropped from the lexical query, which is right while the
+ * facet is doing the work — but a query made only of facet words then has no lexical
+ * query at all. "stimulation" searched for nothing and filtered on a modality column that
+ * is null on every document, so the plainest query in the field returned zero results.
+ * This is what the search falls back to when an interpretation turns out to match nothing.
+ */
+function literalGroups(segments: Segment[], phrases: string[]): TermGroup[] {
+  const groups: TermGroup[] = [];
+  const seen = new Set<string>();
+  const push = (group: TermGroup) => {
+    if (seen.has(group.term) || groups.length >= MAX_TERMS) return;
+    seen.add(group.term);
+    groups.push(group);
+  };
+  for (const phrase of phrases) push({ term: phrase, synonyms: [] });
+  for (const current of segments) {
+    if (current.kind === "term") push(current.group);
+    else for (const word of current.words) push({ term: word, synonyms: [] });
+  }
+  return groups;
+}
+
+/** The lexical query for the words as typed, used when an interpretation matched nothing. */
+export function literalTsQuery(parsed: ParsedQuery): string {
+  return buildTsQuery(parsed.literalExpansions, "and");
 }
 
 /** The broadened query used when the AND query matches nothing: OR between term groups. */

@@ -60,6 +60,11 @@ export interface ParsedQuery {
   interpreted: InterpretedFilter[];
   /** Postgres tsquery text passed to to_tsquery('english', ...). Empty when no terms. */
   tsquery: string;
+  /**
+   * The same groups, plus the words an interpretation consumed. A query made only of
+   * facet words ("stimulation") otherwise has no lexical query to fall back to.
+   */
+  literalExpansions: Array<{ term: string; synonyms: string[] }>;
   /** Quoted phrases searched exactly (also present in `terms`; never interpreted or expanded). */
   phrases: string[];
 }
