@@ -1,4 +1,4 @@
-import { asc, desc, eq, exists, sql } from "drizzle-orm";
+import { asc, desc, eq, exists, inArray, sql } from "drizzle-orm";
 import type { Database } from "@/db/client";
 import * as schema from "@/db/schema";
 import type {
@@ -33,21 +33,38 @@ import {
 import { decodeCursor, paginate } from "./pagination";
 import { loadProvenanceBundle } from "./timeline";
 
+/**
+ * Device ids that appear on a regulatory action. For those, and only those, the
+ * organization on the device row is an applicant a regulator named — a stated maker.
+ */
+async function devicesNamedByARegulator(db: Database, ids: string[]): Promise<Set<string>> {
+  if (!ids.length) return new Set();
+  const rows = await db
+    .selectDistinct({ deviceId: schema.regulatoryActions.deviceId })
+    .from(schema.regulatoryActions)
+    .where(inArray(schema.regulatoryActions.deviceId, ids));
+  return new Set(rows.flatMap((row) => (row.deviceId ? [row.deviceId] : [])));
+}
+
 export async function toDeviceSummaries(db: Database, rows: DeviceRow[]): Promise<DeviceSummary[]> {
   const ids = rows.map((row) => row.id);
   const developerIds = unique(
     rows.flatMap((row) => (row.developerOrganizationId ? [row.developerOrganizationId] : [])),
   );
-  const [developers, conditions, categories] = await Promise.all([
+  const [developers, conditions, categories, regulated] = await Promise.all([
     loadOrganizationRefs(db, developerIds),
     loadConditionsForDevices(db, ids),
     loadCategoriesForDevices(db, ids),
+    devicesNamedByARegulator(db, ids),
   ]);
   return rows.map((row) =>
     toDeviceSummary(row, {
       developer: row.developerOrganizationId
         ? (developers.get(row.developerOrganizationId) ?? null)
         : null,
+      // Only a regulator's applicant is a stated maker. A trial sponsor named the device
+      // and nothing more, so it must not be rendered as one.
+      developerIsStated: regulated.has(row.id),
       conditions: conditions.get(row.id) ?? [],
       technologyCategories: categories.get(row.id) ?? [],
     }),

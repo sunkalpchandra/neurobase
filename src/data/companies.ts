@@ -323,15 +323,23 @@ async function loadDeviceDetails(
     .where(eq(schema.devices.developerOrganizationId, organizationId))
     .orderBy(asc(schema.devices.name));
   const ids = rows.map((row) => row.id);
-  const [conditions, categories, metrics, claims] = await Promise.all([
+  const [conditions, categories, metrics, claims, regulated] = await Promise.all([
     loadConditionsForDevices(db, ids),
     loadCategoriesForDevices(db, ids),
     loadMetricsForDevices(db, ids),
     loadClaimsForEntities(db, "device", ids),
+    db
+      .selectDistinct({ deviceId: schema.regulatoryActions.deviceId })
+      .from(schema.regulatoryActions)
+      .where(ids.length ? inArray(schema.regulatoryActions.deviceId, ids) : sql`false`),
   ]);
+  const statedMakers = new Set(regulated.flatMap((row) => (row.deviceId ? [row.deviceId] : [])));
   return rows.map((row) => ({
     ...toDeviceSummary(row, {
       developer,
+      // This organization is the device row's developer either way; only a regulator
+      // makes that a stated fact rather than a sponsor having named it.
+      developerIsStated: statedMakers.has(row.id),
       conditions: conditions.get(row.id) ?? [],
       technologyCategories: categories.get(row.id) ?? [],
     }),

@@ -147,6 +147,8 @@ export function categoryEntityRef(row: Pick<CategoryRow, "id" | "slug" | "name">
 
 export interface DeviceSummaryInputs {
   developer: OrganizationRef | null;
+  /** True only where a regulator named this organization as the device's applicant. */
+  developerIsStated: boolean;
   conditions: ConditionRef[];
   technologyCategories: TechnologyCategoryRef[];
 }
@@ -167,6 +169,7 @@ export function toDeviceSummary(row: DeviceRow, inputs: DeviceSummaryInputs): De
     evidenceStage: row.evidenceStage,
     knownLimitations: row.knownLimitations,
     developer: inputs.developer,
+    developerIsStated: inputs.developerIsStated,
     conditions: inputs.conditions,
     technologyCategories: inputs.technologyCategories,
     ...provenanceOf(row),

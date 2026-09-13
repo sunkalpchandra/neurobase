@@ -179,6 +179,11 @@ export interface DeviceSummary extends Provenance {
   evidenceStage: EvidenceStage | null;
   knownLimitations: string[];
   developer: OrganizationRef | null;
+  /**
+   * Whether a source states this organization makes the device. False when a trial
+   * sponsor merely named it, which is most of them — see `devices.developerOrganizationId`.
+   */
+  developerIsStated: boolean;
   conditions: ConditionRef[];
   technologyCategories: TechnologyCategoryRef[];
 }

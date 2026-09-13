@@ -17,6 +17,13 @@ export const devices = pgTable(
     id: uuid("id").primaryKey().defaultRandom(),
     slug: text("slug").notNull(),
     name: text("name").notNull(),
+    /**
+     * The organization the source that named this device associated with it. What that
+     * means depends on the source, and the read layer keeps the two apart: on an FDA
+     * clearance it is the applicant, which is the entity that makes the device; on a
+     * trial it is the sponsor, which is only whoever ran a study using it. Rendering both
+     * as "Developer" credited Taipei Veterans General Hospital with 20Hz rTMS.
+     */
     developerOrganizationId: uuid("developer_organization_id").references(() => organizations.id, {
       onDelete: "set null",
     }),
