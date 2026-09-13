@@ -318,11 +318,12 @@ describe("search indexer", () => {
         name: `Condition ${T}`,
       },
     ]);
+    // An undisclosed amount renders as an em dash, which is an absence rather than a
+    // fact, so it is not indexed as metadata.
     expect(doc?.metadata).toEqual([
       { label: "Founded", value: "2020" },
       { label: "Headquarters", value: "Zurich, CH" },
       { label: "Stage", value: "Early feasibility" },
-      { label: "Disclosed funding", value: "—" },
     ]);
     expect(doc?.sourceTypes).toEqual(["company_statement"]);
     expect(doc?.sourceQuality).toBe(0.5);
