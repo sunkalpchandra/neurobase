@@ -126,14 +126,12 @@ beforeAll(async () => {
     })
     .returning({ id: schema.organizations.id });
   organizationId = organization!.id;
-  await db
-    .insert(schema.entityAliases)
-    .values({
-      entityType: "organization",
-      entityId: organizationId,
-      alias: SPONSOR_NAME,
-      normalized: SPONSOR_NAME.toLowerCase(),
-    });
+  await db.insert(schema.entityAliases).values({
+    entityType: "organization",
+    entityId: organizationId,
+    alias: SPONSOR_NAME,
+    normalized: SPONSOR_NAME.toLowerCase(),
+  });
   const [condition] = await db
     .insert(schema.conditions)
     .values({
