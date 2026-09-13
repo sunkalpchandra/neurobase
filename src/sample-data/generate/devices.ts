@@ -1,7 +1,6 @@
 import type { DevelopmentStage } from "@/domain/enums";
 import { DEVELOPMENT_STAGES } from "@/domain/enums";
 import { EVIDENCE_FOR_STAGE, type Archetype } from "../archetypes";
-import type { SeededRandom } from "../random";
 import { conditionDef } from "../taxonomy";
 import { listPhrase } from "../text";
 import type { GenerationContext } from "./context";
