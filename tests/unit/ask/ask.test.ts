@@ -152,7 +152,7 @@ describe("ask service", () => {
   });
 
   it("uses the model when one is configured, and passes it only the records", async () => {
-    const complete = vi.fn(
+    const complete = vi.fn<AnswerModel["complete"]>(
       async () => "Implanted interfaces are being studied [1].\n\nOne trial is recruiting [1].",
     );
     const model: AnswerModel = { id: "test", label: "Test model", complete };
@@ -161,7 +161,7 @@ describe("ask service", () => {
     expect(answer.mode).toBe("generated");
     expect(answer.summary).toBe("Implanted interfaces are being studied [1].");
     expect(answer.sections[0]?.lines).toEqual(["One trial is recruiting [1]."]);
-    const call = complete.mock.calls[0]?.[0] as { system: string; prompt: string } | undefined;
+    const call = complete.mock.calls[0]?.[0];
     expect(call?.system).toContain("ONLY the numbered records");
     expect(call?.prompt).toContain("[1] Clinical trial:");
   });
@@ -195,7 +195,9 @@ describe("ask service", () => {
     const service = createAskService({ search: searchService([result()], 7), model: null, now });
     const answer = await service.answer({ question: "implanted interfaces" });
     expect(answer.interpretation.terms).toEqual(["implanted", "interface"]);
-    expect(answer.interpretation.filters).toEqual([{ label: "Invasive", value: "implanted" }]);
+    expect(answer.interpretation.filters).toEqual([
+      { label: "Invasive", value: "implanted", applied: true },
+    ]);
     expect(answer.interpretation.matchedRecords).toBe(7);
   });
 
@@ -209,13 +211,36 @@ describe("ask service", () => {
     expect(call.pageSize).toBe(24);
   });
 
-  it("does not let a question's phrasing filter the evidence away", async () => {
+  it("answers with the question's own filters when they match something", async () => {
     const search = searchService([result()]);
     const service = createAskService({ search, model: null, now });
-    await service.answer({ question: "Which companies make implanted devices?" });
-    const call = (search.search as ReturnType<typeof vi.fn>).mock.calls[0]?.[0] as {
-      applyInterpretedFilters?: boolean;
+    const answer = await service.answer({ question: "Which trials are recruiting?" });
+    const calls = (search.search as ReturnType<typeof vi.fn>).mock.calls as Array<
+      [{ applyInterpretedFilters?: boolean }]
+    >;
+    expect(calls).toHaveLength(1);
+    expect(calls[0]?.[0].applyInterpretedFilters).toBe(true);
+    expect(answer.interpretation.filters.every((filter) => filter.applied)).toBe(true);
+  });
+
+  it("broadens rather than answering nothing when those filters match nothing", async () => {
+    const empty = searchService([], 0);
+    const withResults = searchService([result()]);
+    const search = {
+      search: vi
+        .fn()
+        .mockImplementationOnce(empty.search)
+        .mockImplementationOnce(withResults.search),
+      suggest: vi.fn(async () => []),
     };
-    expect(call.applyInterpretedFilters).toBe(false);
+    const service = createAskService({ search, model: null, now });
+    const answer = await service.answer({ question: "Which companies make implanted devices?" });
+    const calls = search.search.mock.calls as Array<[{ applyInterpretedFilters?: boolean }]>;
+    expect(calls).toHaveLength(2);
+    expect(calls[0]?.[0].applyInterpretedFilters).toBe(true);
+    expect(calls[1]?.[0].applyInterpretedFilters).toBe(false);
+    expect(answer.citations).toHaveLength(1);
+    // The reader is told the filters were dropped, rather than the answer pretending.
+    expect(answer.interpretation.filters.every((filter) => filter.applied)).toBe(false);
   });
 });
