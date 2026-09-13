@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { isHttpUrl } from "@/lib/urls";
 import {
   ORGANIZATION_KINDS,
   PATENT_STATUSES,
@@ -22,8 +23,11 @@ const isoDate = z
   .nullable();
 
 const provenance = z.object({
-  /** Canonical URL of the upstream record. */
-  url: z.string().url(),
+  /**
+   * Canonical URL of the upstream record. Restricted to http(s): zod's `.url()` accepts
+   * `javascript:` and `data:`, and this value is rendered straight into an href.
+   */
+  url: z.string().url().refine(isHttpUrl, "Expected an http(s) URL"),
   sourceTitle: z.string().min(1),
   sourceType: z.enum(SOURCE_TYPES),
   publisher: z.string().min(1),
@@ -142,7 +146,7 @@ export const organizationRecordSchema = base.extend({
   kind: z.literal("organization"),
   name: z.string().min(1),
   description: z.string().default(""),
-  website: z.string().url().nullable().default(null),
+  website: z.string().url().refine(isHttpUrl, "Expected an http(s) URL").nullable().default(null),
   country: z.string().length(2).nullable().default(null),
   /** What the upstream record says the organization is; defaults to company. */
   organizationKind: z.enum(ORGANIZATION_KINDS).default("company"),
