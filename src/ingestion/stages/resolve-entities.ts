@@ -16,6 +16,101 @@ export interface ResolutionOutcome {
   }>;
 }
 
+/** Words that mark a name as an institution rather than a person. */
+const ORGANIZATION_MARKERS = [
+  "inc",
+  "llc",
+  "ltd",
+  "limited",
+  "gmbh",
+  "corp",
+  "corporation",
+  "co",
+  "plc",
+  "sa",
+  "ag",
+  "bv",
+  "nv",
+  "oy",
+  "ab",
+  "as",
+  "pty",
+  "university",
+  "universite",
+  "universidad",
+  "universitat",
+  "college",
+  "institute",
+  "institut",
+  "hospital",
+  "clinic",
+  "center",
+  "centre",
+  "foundation",
+  "trust",
+  "school",
+  "laboratory",
+  "labs",
+  "lab",
+  "medical",
+  "health",
+  "research",
+  "systems",
+  "technologies",
+  "technology",
+  "therapeutics",
+  "sciences",
+  "science",
+  "group",
+  "society",
+  "association",
+  "council",
+  "ministry",
+  "department",
+  "agency",
+  "administration",
+  "national",
+  "federal",
+  "academy",
+  "network",
+  "consortium",
+  "alliance",
+  "partners",
+  "ventures",
+  "capital",
+  "holdings",
+  "company",
+  "bioscience",
+  "biosciences",
+  "pharmaceutical",
+  "pharmaceuticals",
+  "medtech",
+  "devices",
+  "neuro",
+  "gruppo",
+  "spa",
+];
+
+/**
+ * Registries let an individual investigator be the listed sponsor, so a "sponsor" is
+ * sometimes a person's name. Recording that as a company would be wrong, and the record
+ * itself gives no way to tell beyond the shape of the name: two or three capitalised
+ * words with none of the markers an institution carries.
+ */
+export function looksLikePersonName(name: string): boolean {
+  const trimmed = name.trim();
+  if (!trimmed || /[,&]|\d/.test(trimmed)) return false;
+  const words = trimmed.split(/\s+/);
+  if (words.length < 2 || words.length > 4) return false;
+  const lower = trimmed.toLowerCase().replace(/[.]/g, "");
+  if (ORGANIZATION_MARKERS.some((marker) => new RegExp(`(^|\\s)${marker}($|\\s)`).test(lower)))
+    return false;
+  // Every word starts with a capital, allowing an initial ("J.") or a particle ("van").
+  return words.every((word) =>
+    /^([A-Z][a-z'’-]*\.?|[A-Z]\.|van|von|de|del|della|da|di|bin|al)$/.test(word),
+  );
+}
+
 /** Lower-cased, punctuation-stripped form used for alias lookups. */
 export function normalizeForMatch(text: string): string {
   return text
