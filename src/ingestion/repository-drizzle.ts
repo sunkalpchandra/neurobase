@@ -1,4 +1,4 @@
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq, inArray, isNull, sql } from "drizzle-orm";
 import type { Database } from "@/db/client";
 import * as schema from "@/db/schema";
 import type { EntityType, IngestionRunStatus } from "@/domain/enums";
@@ -278,11 +278,79 @@ export function createDrizzleRepository(db: Database): IngestionRepository {
       });
     },
 
+    async ensureDevice(input) {
+      const slug = slugify(input.name).slice(0, 90);
+      if (!slug) throw new Error(`Cannot record a device named "${input.name}"`);
+      return db.transaction(async (tx) => {
+        const [existing] = await tx
+          .select({ id: schema.devices.id })
+          .from(schema.devices)
+          .where(eq(schema.devices.slug, slug))
+          .limit(1);
+        if (existing) {
+          // A later source may know the developer when the first one did not.
+          if (input.developerOrganizationId) {
+            await tx
+              .update(schema.devices)
+              .set({
+                developerOrganizationId: input.developerOrganizationId,
+                updatedAt: new Date(),
+              })
+              .where(
+                and(
+                  eq(schema.devices.id, existing.id),
+                  isNull(schema.devices.developerOrganizationId),
+                ),
+              );
+          }
+          return existing.id;
+        }
+        const [row] = await tx
+          .insert(schema.devices)
+          .values({
+            slug,
+            name: input.name,
+            developerOrganizationId: input.developerOrganizationId,
+            description: input.description,
+            // Nothing beyond the name is stated by a clearance or an intervention, so
+            // every classified field stays at its least-committal value until a record
+            // supports something narrower. "other" and "research" mean "not yet known".
+            interfaceType: "other",
+            invasiveness: "noninvasive",
+            modality: "stimulation",
+            developmentStage: "research",
+            evidenceStage: "concept",
+            ...INGESTED_PROVENANCE,
+            confidence: "low" as const,
+          })
+          .returning({ id: schema.devices.id });
+        if (!row) throw new Error(`Failed to record the device ${input.name}`);
+        const [claimRow] = await tx
+          .insert(schema.claims)
+          .values({
+            entityType: "device",
+            entityId: row.id,
+            claimKind: "device_record",
+            statement: input.description,
+            ...INGESTED_PROVENANCE,
+          })
+          .returning({ id: schema.claims.id });
+        if (claimRow) {
+          await tx
+            .insert(schema.claimSources)
+            .values({ claimId: claimRow.id, sourceId: input.sourceId })
+            .onConflictDoNothing();
+        }
+        return row.id;
+      });
+    },
+
     async publish(input: PublishInput): Promise<PublishResult> {
       return db.transaction(async (tx) => {
         const { record } = input;
         const entityType = entityTypeOf(record);
         const { entityId, updated } = await upsertEntity(tx, input);
+        await linkCategories(tx, entityType, entityId, input.categorySlugs);
 
         for (const claim of input.claims) {
           const [claimRow] = await tx
@@ -660,6 +728,36 @@ async function recordAliases(tx: Tx, organizationId: string, names: string[]): P
       .insert(schema.entityAliases)
       .values({ entityType: "organization", entityId: organizationId, alias: name, normalized })
       .onConflictDoNothing();
+  }
+}
+
+/** Attaches an entity to the technology categories its own text supports. */
+async function linkCategories(
+  tx: Tx,
+  entityType: EntityType,
+  entityId: string,
+  slugs: string[],
+): Promise<void> {
+  if (slugs.length === 0) return;
+  // Only organizations and devices carry category links in the schema; other entity
+  // types reach categories through the organization or device they belong to.
+  if (entityType !== "organization" && entityType !== "device") return;
+  const rows = await tx
+    .select({ id: schema.technologyCategories.id })
+    .from(schema.technologyCategories)
+    .where(inArray(schema.technologyCategories.slug, slugs));
+  for (const row of rows) {
+    if (entityType === "organization") {
+      await tx
+        .insert(schema.organizationTechnologyCategories)
+        .values({ organizationId: entityId, categoryId: row.id })
+        .onConflictDoNothing();
+    } else {
+      await tx
+        .insert(schema.deviceTechnologyCategories)
+        .values({ deviceId: entityId, categoryId: row.id })
+        .onConflictDoNothing();
+    }
   }
 }
 

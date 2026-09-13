@@ -51,6 +51,8 @@ export interface PublishInput {
   links: ResolvedLinks;
   claims: ClaimInput[];
   event: EventInput | null;
+  /** Technology category slugs the record's own text supports. */
+  categorySlugs: string[];
 }
 
 export interface PublishResult {
@@ -67,6 +69,14 @@ export interface EnsureOrganizationInput {
   /** ISO 3166-1 alpha-2, when the upstream record states one. */
   country: string | null;
   /** The record that named it; becomes the organization's first source. */
+  sourceId: string;
+  description: string;
+}
+
+export interface EnsureDeviceInput {
+  name: string;
+  /** The organization the source names as responsible, when it names one. */
+  developerOrganizationId: string | null;
   sourceId: string;
   description: string;
 }
@@ -117,6 +127,14 @@ export interface IngestionRepository {
    * already known, so repeated runs converge instead of duplicating.
    */
   ensureOrganization(input: EnsureOrganizationInput): Promise<string>;
+
+  /**
+   * Records a device an authoritative source names — an FDA clearance's device name, a
+   * registry intervention. Only the facts the source states are stored; interface type,
+   * invasiveness and evidence stage stay at their most conservative value until a
+   * record says otherwise.
+   */
+  ensureDevice(input: EnsureDeviceInput): Promise<string>;
 
   /** Writes the entity, its links, its claims and its development in one transaction. */
   publish(input: PublishInput): Promise<PublishResult>;
