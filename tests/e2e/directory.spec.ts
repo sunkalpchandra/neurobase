@@ -69,3 +69,46 @@ test.describe("company directory", () => {
     await expect(page.getByText(/Showing 26–/)).toBeVisible();
   });
 });
+
+test.describe("organization directory", () => {
+  test("lists every organization, not only the companies", async ({ page }) => {
+    await page.goto("/organizations");
+    await expect(page.getByRole("heading", { level: 1, name: "Organizations" })).toBeVisible();
+
+    const countOf = async (path: string): Promise<number> => {
+      await page.goto(path);
+      const text = await page
+        .getByText(/\d+ (organizations?|companies|company) match/)
+        .first()
+        .textContent();
+      return Number(/(\d+)/.exec(text ?? "")?.[1] ?? "0");
+    };
+
+    // The company directory is a strict subset. Universities, hospitals and agencies are
+    // reachable only here, which is the reason this route exists.
+    const organizations = await countOf("/organizations");
+    const companies = await countOf("/companies");
+    expect(organizations).toBeGreaterThan(companies);
+  });
+
+  test("a type nobody stated is shown as an absence, not as a guess", async ({ page }) => {
+    await page.goto("/organizations?organizationKind=unstated");
+    const table = page.getByRole("table", { name: "Organization directory" });
+    const stacked = page.getByRole("list", { name: "Organization directory" });
+    if (isMobile(page)) {
+      await expect(stacked.getByRole("listitem").first()).toBeVisible();
+    } else {
+      await expect(table.getByRole("columnheader", { name: "Type" })).toBeVisible();
+      // Every row in this filter is a row no source classified, so the Type cell must be
+      // an em dash. A label here would be the database asserting something it was told.
+      await expect(table.getByRole("row").nth(1).getByText("—").first()).toBeVisible();
+    }
+  });
+
+  test("the company directory ignores a type injected into the address", async ({ page }) => {
+    await page.goto("/companies?organizationKind=university");
+    await expect(page.getByRole("heading", { level: 1, name: "Companies" })).toBeVisible();
+    // A Companies heading over a list of universities would be a lie told by a query string.
+    await expect(page.getByText(/\d+ (companies|company) match/).first()).toBeVisible();
+  });
+});

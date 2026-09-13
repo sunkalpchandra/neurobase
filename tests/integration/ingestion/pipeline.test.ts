@@ -48,6 +48,7 @@ function trial(index: number, sponsorName: string | null): NormalizedRecord {
     completionDate: "2027-02-01",
     completionIsEstimate: true,
     sponsorName,
+    sponsorClass: "INDUSTRY",
     registryUpdatedOn: "2026-03-01",
     affiliations: [],
     mentions: {

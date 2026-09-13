@@ -36,6 +36,7 @@ function trialRecord(overrides: Partial<Record<string, unknown>> = {}): Normaliz
     completionDate: "2027-01-05",
     completionIsEstimate: true,
     sponsorName: "Kestrel Neurotech",
+    sponsorClass: "INDUSTRY",
     registryUpdatedOn: "2026-02-01",
     affiliations: [],
     mentions: {
