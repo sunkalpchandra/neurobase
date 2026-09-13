@@ -459,3 +459,94 @@ describe("retry-after handling", () => {
     expect(slept).toContain(7000);
   });
 });
+
+describe("classification and name shape", () => {
+  it("assigns a category only when the record's own text supports it", async () => {
+    const { classifyCategories } = await import("@/ingestion/stages/classify");
+    const dbs = trialRecord({
+      title: "Connectomic Guided DBS for Parkinson's Disease",
+      summary: "Deep brain stimulation targeting.",
+    });
+    expect(classifyCategories(dbs)).toContain("deep-brain-stimulation");
+    // A record that never mentions the technology is not assigned to it.
+    expect(
+      classifyCategories(
+        trialRecord({ title: "A study of knee braces", summary: "Orthopaedics." }),
+      ),
+    ).toEqual([]);
+  });
+
+  it("matches conditions through the registry spellings", async () => {
+    const { classifyConditions } = await import("@/ingestion/stages/classify");
+    expect(
+      classifyConditions(trialRecord({ title: "A study in Spinal Cord Injuries", summary: "" })),
+    ).toContain("spinal-cord-injury");
+    expect(
+      classifyConditions(trialRecord({ title: "A study in Parkinson Disease", summary: "" })),
+    ).toContain("parkinson-disease");
+  });
+
+  it("does not fire on a term inside a longer word", async () => {
+    const { classifyCategories } = await import("@/ingestion/stages/classify");
+    // "scs" must not match inside "discs".
+    expect(
+      classifyCategories(trialRecord({ title: "Herniated discs study", summary: "" })),
+    ).not.toContain("spinal-cord-stimulation");
+  });
+
+  it("tells an individual investigator apart from an institution", async () => {
+    const { looksLikePersonName } = await import("@/ingestion/stages/resolve-entities");
+    for (const person of ["Ali Rezai", "Jane A. Smith", "J. van Dijk"]) {
+      expect(looksLikePersonName(person), person).toBe(true);
+    }
+    for (const organization of [
+      "University of Houston",
+      "Boston Scientific Corp.",
+      "Medtronic",
+      "Mayo Clinic",
+      "Van Andel Institute",
+      "NeuroPace, Inc.",
+      "Massachusetts General Hospital",
+    ]) {
+      expect(looksLikePersonName(organization), organization).toBe(false);
+    }
+  });
+
+  it("queues a person-shaped sponsor instead of recording it as a company", async () => {
+    const repository = createMemoryRepository();
+    const report = await runPipeline(repository, {
+      adapter: fakeAdapter([
+        trialRecord({
+          sponsorName: "Ali Rezai",
+          mentions: {
+            organizationNames: ["Ali Rezai"],
+            personNames: [],
+            conditionNames: [],
+            deviceNames: [],
+          },
+        }),
+      ]),
+      query: "bci",
+      limit: 10,
+      createOrganizations: true,
+      now: () => new Date("2026-09-13T12:00:00Z"),
+    });
+    expect(report.counts.published).toBe(1);
+    expect(repository.createdOrganizations.size).toBe(0);
+    expect(
+      repository.reviewed.some((entry) => entry.reason.includes("looks like an individual")),
+    ).toBe(true);
+  });
+
+  it("records a device an authoritative record names", async () => {
+    const repository = createMemoryRepository();
+    await runPipeline(repository, {
+      adapter: fakeAdapter([trialRecord()]),
+      query: "bci",
+      limit: 10,
+      createOrganizations: true,
+      now: () => new Date("2026-09-13T12:00:00Z"),
+    });
+    expect([...repository.createdDevices.keys()]).toContain("test array");
+  });
+});
