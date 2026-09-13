@@ -193,7 +193,7 @@ export function createOpenAlexWorksAdapter(client?: HttpClient): SourceAdapter {
       // university, hospital, company or lab rather than guessed from the record kind.
       const affiliations = new Map<
         string,
-        { name: string; kind: OrganizationKind; country: string | null }
+        { name: string; kind: OrganizationKind | null; country: string | null }
       >();
       for (const authorship of work.authorships ?? []) {
         for (const institution of authorship.institutions ?? []) {
@@ -202,7 +202,9 @@ export function createOpenAlexWorksAdapter(client?: HttpClient): SourceAdapter {
           const country = institution.country_code?.toUpperCase() ?? null;
           affiliations.set(name.toLowerCase(), {
             name,
-            kind: INSTITUTION_KIND_MAP[institution.type ?? ""] ?? "research_lab",
+            // A type OpenAlex does not publish, or one outside the map, is left unstated
+            // rather than filed as a lab: the catalogue not saying is not evidence.
+            kind: INSTITUTION_KIND_MAP[institution.type ?? ""] ?? null,
             country: country && /^[A-Z]{2}$/.test(country) ? country : null,
           });
         }
