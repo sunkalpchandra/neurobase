@@ -116,6 +116,7 @@ export default async function HomePage({ searchParams }: PageProps) {
 
           {developments.items.length === 0 ? (
             <EmptyState
+              headingLevel={3}
               title="No developments yet"
               description={
                 feedQuery.topic

@@ -35,6 +35,7 @@ export function ProvenanceSections({ name, timeline, sources, claims }: Provenan
           <SourceLedger entries={sources} caption={`Sources for ${name}`} />
         ) : (
           <EmptyState
+            headingLevel={3}
             title="No sources recorded"
             description="This record is not yet backed by a retrievable source."
           />

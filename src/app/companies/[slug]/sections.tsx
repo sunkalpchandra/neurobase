@@ -203,6 +203,7 @@ export function TechnologySection({ devices }: { devices: DeviceDetail[] }) {
     <Section id="technology" title="Technology" aside={pluralize(devices.length, "device")}>
       {devices.length === 0 ? (
         <EmptyState
+          headingLevel={3}
           title="No devices recorded"
           description="No device or platform has been linked to this company yet."
         />
@@ -429,6 +430,7 @@ export function ClinicalSection({
         caption="Clinical trials"
         emptyState={
           <EmptyState
+            headingLevel={3}
             title="No clinical trials"
             description="No registered trial is linked to this company or its devices."
           />
@@ -518,6 +520,7 @@ export function ResearchSection({ publications }: { publications: PublicationSum
         caption="Research publications"
         emptyState={
           <EmptyState
+            headingLevel={3}
             title="No research linked"
             description="No publication has been linked to this company or its devices."
           />
@@ -621,6 +624,7 @@ export function FundingSection({
         caption="Funding history"
         emptyState={
           <EmptyState
+            headingLevel={3}
             title="No funding recorded"
             description="No funding round has been recorded for this company."
           />
@@ -684,6 +688,7 @@ export function PatentsSection({ patents }: { patents: PatentSummary[] }) {
         caption="Patents"
         emptyState={
           <EmptyState
+            headingLevel={3}
             title="No patents recorded"
             description="No patent assigned to this company has been recorded."
           />
@@ -700,6 +705,7 @@ export function TimelineSection({ profile }: { profile: CompanyProfile }) {
         <Timeline events={profile.timeline} label={`${profile.name} timeline`} />
       ) : (
         <EmptyState
+          headingLevel={3}
           title="No events recorded"
           description="Founding, funding, trials, publications and regulatory milestones appear here once recorded."
         />
@@ -720,6 +726,7 @@ export function SourcesSection({ profile }: { profile: CompanyProfile }) {
         <SourceLedger entries={profile.sources} caption={`Sources for ${profile.name}`} />
       ) : (
         <EmptyState
+          headingLevel={3}
           title="No sources recorded"
           description="Claims on this page are not yet backed by a retrievable source."
         />

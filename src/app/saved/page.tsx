@@ -121,6 +121,7 @@ export default async function SavedPage() {
           caption="Saved items"
           emptyState={
             <EmptyState
+              headingLevel={3}
               title="Nothing saved yet"
               description="Use Save on any development, company, device, trial or paper to keep it here."
               action={
@@ -141,6 +142,7 @@ export default async function SavedPage() {
           caption="Followed entities"
           emptyState={
             <EmptyState
+              headingLevel={3}
               title="Not following anything"
               description="Follow a company from its profile to see its developments recommended below. Following topics, researchers, labs, devices, conditions and trials uses the same model."
               action={
@@ -160,6 +162,7 @@ export default async function SavedPage() {
       >
         {forYou.length === 0 ? (
           <EmptyState
+            headingLevel={3}
             title="No recommendations yet"
             description="Recommendations appear once you follow or save something with linked developments."
           />

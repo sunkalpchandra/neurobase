@@ -97,6 +97,7 @@ export function SourceLedger({
       className={className}
       emptyState={
         <EmptyState
+          headingLevel={3}
           title="No sources recorded"
           description="Sources appear here once claims on this page are linked to retrievable documents."
         />
