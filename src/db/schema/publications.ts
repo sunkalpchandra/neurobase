@@ -28,6 +28,8 @@ export const publications = pgTable(
     publishedOn: date("published_on", { mode: "string" }),
     year: integer("year"),
     url: text("url"),
+    /** Research areas the indexing catalogue assigned; searchable, not a taxonomy. */
+    topics: text("topics").array().notNull().default([]),
     evidenceStage: evidenceStageEnum("evidence_stage").notNull(),
     ...provenanceColumns,
   },

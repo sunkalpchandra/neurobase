@@ -1,0 +1,1 @@
+ALTER TABLE "publications" ADD COLUMN "topics" text[] DEFAULT '{}' NOT NULL;
