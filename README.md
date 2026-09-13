@@ -80,6 +80,7 @@ work; the `DATABASE_URL` in `.env` is the only required configuration.
 - [docs/SEARCH.md](docs/SEARCH.md) — ranking formula, lexical fallback, enabling embeddings
 - [docs/IMPACT.md](docs/IMPACT.md) — explainable impact assessment rules
 - [docs/INGESTION.md](docs/INGESTION.md) — pipeline stages, adapters, what must not be scraped
+- [docs/ASK.md](docs/ASK.md) — how answers are grounded, the two modes, and the prompt
 - [docs/SAMPLE-DATA.md](docs/SAMPLE-DATA.md) — what the development dataset is and is not
 - [docs/API.md](docs/API.md) — HTTP endpoints
 

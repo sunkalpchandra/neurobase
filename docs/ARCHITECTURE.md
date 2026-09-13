@@ -63,6 +63,8 @@ blobs, emoji icons, marketing copy, or invented metrics.
 ## Cross-module contracts
 
 - `src/domain/impact/index.ts` exports `assessImpact(input: ImpactInput): ImpactAssessment`.
+- `src/ask/index.ts` exports `getAskService(): AskService`; answers are grounded in the
+  search service and cite the records they used (see docs/ASK.md).
 - `src/search/index.ts` exports `getSearchService(): SearchService`; `src/search/indexer.ts`
   exports `createSearchIndexer(db: Database, options?: { embeddings?: EmbeddingsProvider | null }): SearchIndexer`.
 - `src/sample-data/index.ts` exports `generateSampleDataset(options?): SampleDataset` and
