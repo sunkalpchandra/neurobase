@@ -61,9 +61,12 @@ export default async function DevicePage({ params }: PageProps<Params>) {
         meta={
           <>
             {device.developer ? (
-              <Link href={toRoute(routes.company(device.developer.slug))} className={linkClass}>
-                {device.developer.name}
-              </Link>
+              <span>
+                {device.developerIsStated ? "Developer" : "Named in a trial by"}{" "}
+                <Link href={toRoute(routes.company(device.developer.slug))} className={linkClass}>
+                  {device.developer.name}
+                </Link>
+              </span>
             ) : (
               <span>Developer unknown</span>
             )}

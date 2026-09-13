@@ -5,19 +5,13 @@ import type { PageProps } from "@/app/_lib/page-props";
 import { rawParams } from "@/app/_lib/page-props";
 import { listDevices } from "@/data/devices";
 import { getDb } from "@/db/client";
-import {
-  DEVELOPMENT_STAGE_LABELS,
-  INTERFACE_TYPE_LABELS,
-  INVASIVENESS_LABELS,
-  MODALITY_LABELS,
-} from "@/domain/enums";
+
 import type { DeviceSummary } from "@/domain/types";
 import { ValidationError } from "@/lib/errors";
 import { pluralize } from "@/lib/format";
-import { labelOr } from "@/lib/labels";
+import { NOT_RECORDED } from "@/lib/labels";
 import { routes, toRoute, withQuery } from "@/lib/routes";
 import { parseListQuery, toSearchParams } from "@/lib/validation";
-import { EvidenceStageLabel } from "@/components/entities/evidence-stage-label";
 import { SampleDataNotice } from "@/components/entities/sample-data-notice";
 import { PageHeader } from "@/components/shell/page-header";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
@@ -46,45 +40,27 @@ const columns: DataTableColumn<DeviceSummary>[] = [
   },
   {
     key: "developer",
-    header: "Developer",
+    // Not "Developer": on 494 of 669 rows this organization is a trial sponsor that named
+    // the device, not its maker. Only a regulator's applicant is a stated maker.
+    header: "Developer or trial sponsor",
     cell: (device) =>
       device.developer ? (
-        <Link href={toRoute(routes.company(device.developer.slug))} className="hover:underline">
-          {device.developer.name}
-        </Link>
+        <span className="flex flex-col">
+          <Link href={toRoute(routes.company(device.developer.slug))} className="hover:underline">
+            {device.developer.name}
+          </Link>
+          <span className="text-2xs text-ink-muted">
+            {device.developerIsStated ? "Developer" : "Named it in a trial"}
+          </span>
+        </span>
       ) : (
-        "—"
+        NOT_RECORDED
       ),
-  },
-  {
-    key: "interface",
-    header: "Interface",
-    cell: (device) => labelOr(INTERFACE_TYPE_LABELS, device.interfaceType),
-  },
-  {
-    key: "invasiveness",
-    header: "Invasiveness",
-    cell: (device) => labelOr(INVASIVENESS_LABELS, device.invasiveness),
-  },
-  {
-    key: "modality",
-    header: "Modality",
-    cell: (device) => labelOr(MODALITY_LABELS, device.modality),
   },
   {
     key: "conditions",
     header: "Target conditions",
     cell: (device) => device.conditions.map((condition) => condition.name).join(", ") || "—",
-  },
-  {
-    key: "stage",
-    header: "Stage",
-    cell: (device) => labelOr(DEVELOPMENT_STAGE_LABELS, device.developmentStage),
-  },
-  {
-    key: "evidence",
-    header: "Evidence",
-    cell: (device) => <EvidenceStageLabel stage={device.evidenceStage} />,
   },
 ];
 
@@ -103,7 +79,7 @@ export default async function DevicesPage({ searchParams }: PageProps) {
     <div className="flex flex-col">
       <PageHeader
         title="Devices"
-        description="Neural interfaces and neuromodulation platforms with interface type, invasiveness, modality, target conditions, development stage and evidence stage."
+        description="Neural interfaces, neuromodulation platforms and the interventions clinical trials name. Each row shows who the source associates with it and what it targets. Interface type, invasiveness and modality are not shown because no source in this database states them."
         meta={
           <>
             <span>{pluralize(total, "device")}</span>
