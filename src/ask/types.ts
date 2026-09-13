@@ -44,7 +44,8 @@ export interface AskAnswer {
   /** What the retriever searched for, so the reader can adjust it. */
   interpretation: {
     terms: string[];
-    filters: Array<{ label: string; value: string }>;
+    /** Filters read from the wording; `applied` is false when they were too narrow. */
+    filters: Array<{ label: string; value: string; applied: boolean }>;
     matchedRecords: number;
   };
   answeredAt: ISOTimestamp;

@@ -8,7 +8,8 @@ import type { AskCitation } from "./types";
 export interface Retrieval {
   results: SearchResult[];
   terms: string[];
-  filters: Array<{ label: string; value: string }>;
+  /** What the parser read from the wording, and whether it narrowed the evidence. */
+  filters: Array<{ label: string; value: string; applied: boolean }>;
   totalMatched: number;
 }
 
@@ -40,23 +41,32 @@ export async function retrieveForQuestion(
   limit: number,
 ): Promise<Retrieval> {
   const query = toSearchQuery(question);
-  const response = await search.search({
+  const request = {
     q: query,
-    category: "all",
+    category: "all" as const,
     filters: {},
     cursor: null,
     pageSize: limit,
-    // A question's phrasing should steer ranking, not hard-filter the evidence: asking
-    // about "companies developing implanted devices" must not exclude the trial that
-    // answers it. The interpretation is still reported, so the reader sees what was read.
-    applyInterpretedFilters: false,
-  });
+  };
+
+  // Asking "which trials are recruiting" should answer with recruiting trials, so the
+  // filters the parser reads from the wording are tried first. A question phrased in a
+  // way that filters everything away must still be answered, so an empty precise result
+  // falls back to ranking alone.
+  const precise = await search.search({ ...request, applyInterpretedFilters: true });
+  const response =
+    precise.results.length > 0
+      ? precise
+      : await search.search({ ...request, applyInterpretedFilters: false });
+  const filtersApplied = response === precise;
+
   return {
     results: response.results,
     terms: response.parsed.terms,
     filters: response.parsed.interpreted.map((entry) => ({
       label: entry.label,
       value: entry.matchedTerm,
+      applied: filtersApplied,
     })),
     totalMatched: response.pageInfo.totalCount ?? response.results.length,
   };
