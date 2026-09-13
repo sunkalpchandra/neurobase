@@ -1,0 +1,44 @@
+name: Weekly refresh
+
+# Sunday 06:00 UTC. Cron on GitHub Actions is best-effort: a run can start late when
+# the runner pool is busy, which is fine for a weekly top-up.
+on:
+  schedule:
+    - cron: "0 6 * * 0"
+  workflow_dispatch:
+    inputs:
+      scale:
+        description: "Fraction of the full query plan to run"
+        required: false
+        default: "0.5"
+
+concurrency:
+  group: refresh
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    # DATABASE_URL must point at the deployed database. Without it the job is skipped
+    # rather than failing every week against a database that does not exist.
+    if: ${{ vars.REFRESH_ENABLED == 'true' }}
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      INGEST_CONTACT_EMAIL: ${{ secrets.INGEST_CONTACT_EMAIL }}
+      NCBI_API_KEY: ${{ secrets.NCBI_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --legacy-peer-deps
+      - name: Apply any new migrations
+        run: npm run db:migrate
+      - name: Refresh the controlled vocabulary
+        run: npm run db:reference
+      - name: Ingest new records and reindex
+        run: npm run corpus -- --scale ${{ inputs.scale || '0.5' }}
+      - name: Report what changed
+        run: npm run corpus:report
