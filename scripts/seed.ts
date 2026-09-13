@@ -1,6 +1,6 @@
 import "dotenv/config";
 import { parseArgs } from "node:util";
-import { eq, inArray } from "drizzle-orm";
+import { eq, inArray, sql } from "drizzle-orm";
 import { closeDb, getDb, type Database } from "../src/db/client";
 import * as schema from "../src/db/schema";
 import { generateSampleDataset, seedDatabase } from "../src/sample-data";
@@ -28,7 +28,18 @@ const { values } = parseArgs({
 
 async function deleteSampleRows(db: Database, dataset: SampleDataset): Promise<void> {
   await db.transaction(async (tx) => {
-    // Root tables first; foreign keys cascade to join tables and children.
+    // entity_aliases holds a loose polymorphic reference with no foreign key, so no
+    // cascade reaches it. Its rows must go before the entities they name, or the next
+    // load collides on (entity_type, normalized) with an alias for a row that is gone.
+    await tx.execute(sql`
+      DELETE FROM entity_aliases a
+      WHERE (a.entity_type = 'organization' AND EXISTS (
+              SELECT 1 FROM organizations o WHERE o.id = a.entity_id AND o.is_sample))
+         OR (a.entity_type = 'condition' AND EXISTS (
+              SELECT 1 FROM conditions c WHERE c.id = a.entity_id AND c.slug LIKE 'fx-%'))
+    `);
+
+    // Root tables next; foreign keys cascade to join tables and children.
     await tx.delete(schema.searchDocuments).where(eq(schema.searchDocuments.isSample, true));
     await tx.delete(schema.events).where(eq(schema.events.isSample, true));
     await tx.delete(schema.newsArticles).where(eq(schema.newsArticles.isSample, true));
