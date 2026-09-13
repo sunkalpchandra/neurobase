@@ -243,6 +243,9 @@ function AnswerView({ answer }: { answer: AskAnswer }) {
             <>
               , with {answer.interpretation.filters.map((filter) => filter.label).join(" and ")}{" "}
               read from the wording
+              {answer.interpretation.filters.every((filter) => filter.applied)
+                ? " and applied as a filter"
+                : " but not applied, because filtering on it left no records"}
             </>
           ) : null}
           . That matched {pluralize(answer.interpretation.matchedRecords, "record")}, of which the
