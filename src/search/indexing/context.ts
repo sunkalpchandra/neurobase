@@ -104,10 +104,17 @@ export function entityRef(type: EntityType, id: string, key: string, name: strin
   return { type, id, href: hrefForEntity(type, key), name };
 }
 
+/**
+ * Keeps only pairs that carry a value. The formatters render an unknown number as an
+ * em dash, which reads as a fact ("disclosed funding —") when it is really an absence,
+ * so those are dropped rather than indexed.
+ */
 export function metadataPairs(
   pairs: Array<[string, string | null | undefined]>,
 ): Array<{ label: string; value: string }> {
-  return pairs.flatMap(([label, value]) => (value ? [{ label, value }] : []));
+  return pairs.flatMap(([label, value]) =>
+    value && value !== "—" && value !== "Undisclosed" ? [{ label, value }] : [],
+  );
 }
 
 export type SourceTypeSets = Map<string, Set<SourceType>>;
