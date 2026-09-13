@@ -2,7 +2,13 @@ import { Skeleton, SkeletonLines } from "@/components/ui/skeleton";
 
 export default function SearchLoading() {
   return (
-    <div className="flex flex-col" aria-busy="true" aria-label="Loading search results">
+    <div
+      className="flex flex-col"
+      role="status"
+      aria-live="polite"
+      aria-busy="true"
+      aria-label="Loading search results"
+    >
       <header className="border-b border-line py-6">
         <Skeleton variant="line" width="8rem" height="1.5rem" />
         <div className="mt-2">

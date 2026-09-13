@@ -2,7 +2,13 @@ import { Skeleton, SkeletonLines } from "@/components/ui/skeleton";
 
 export default function CompaniesLoading() {
   return (
-    <div className="flex flex-col" aria-busy="true" aria-label="Loading companies">
+    <div
+      className="flex flex-col"
+      role="status"
+      aria-live="polite"
+      aria-busy="true"
+      aria-label="Loading companies"
+    >
       <header className="border-b border-line py-6">
         <Skeleton variant="line" width="10rem" height="1.5rem" />
         <div className="mt-2 max-w-prose">
