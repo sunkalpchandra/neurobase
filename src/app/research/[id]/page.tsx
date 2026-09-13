@@ -9,6 +9,7 @@ import { ProvenanceSections } from "@/app/_lib/provenance-sections";
 import { Section } from "@/app/_lib/section";
 import { entityKey } from "@/data/entities";
 import { getPublication } from "@/data/publications";
+import { getPublicationMeta } from "@/data/metadata";
 import { getDb } from "@/db/client";
 import {
   EVIDENCE_STAGE_LABELS,
@@ -35,8 +36,11 @@ async function load(id: string) {
 
 export async function generateMetadata({ params }: PageProps<Params>): Promise<Metadata> {
   const { id } = await params;
-  const publication = await load(id);
-  return { title: publication ? publication.title : "Publication not found" };
+  const meta = z.uuid().safeParse(id).success ? await getPublicationMeta(getDb(), id) : null;
+  return {
+    title: meta ? meta.title : "Publication not found",
+    description: meta?.description?.slice(0, 160),
+  };
 }
 
 export default async function PublicationPage({ params }: PageProps<Params>) {

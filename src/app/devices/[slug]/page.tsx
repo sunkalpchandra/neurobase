@@ -8,6 +8,7 @@ import { ProvenanceSections } from "@/app/_lib/provenance-sections";
 import { Section } from "@/app/_lib/section";
 import { getDeviceBySlug } from "@/data/devices";
 import { entityKey } from "@/data/entities";
+import { getDeviceMeta } from "@/data/metadata";
 import { getDb } from "@/db/client";
 import {
   DEVELOPMENT_STAGE_LABELS,
@@ -34,10 +35,10 @@ type Params = { slug: string };
 
 export async function generateMetadata({ params }: PageProps<Params>): Promise<Metadata> {
   const { slug } = await params;
-  const device = await getDeviceBySlug(getDb(), slug);
+  const meta = await getDeviceMeta(getDb(), slug);
   return {
-    title: device ? device.name : "Device not found",
-    description: device?.description.slice(0, 160),
+    title: meta ? meta.title : "Device not found",
+    description: meta?.description?.slice(0, 160),
   };
 }
 

@@ -8,6 +8,7 @@ import { ProvenanceSections } from "@/app/_lib/provenance-sections";
 import { Section } from "@/app/_lib/section";
 import { entityKey } from "@/data/entities";
 import { getTrialByRegistryId } from "@/data/trials";
+import { getTrialMeta } from "@/data/metadata";
 import { getDb } from "@/db/client";
 import { TRIAL_PHASE_LABELS, TRIAL_STATUS_LABELS, type TrialStatus } from "@/domain/enums";
 import { formatDate, formatInteger, pluralize } from "@/lib/format";
@@ -38,8 +39,11 @@ const STATUS_VARIANT: Record<TrialStatus, BadgeVariant> = {
 
 export async function generateMetadata({ params }: PageProps<Params>): Promise<Metadata> {
   const { registryId } = await params;
-  const trial = await getTrialByRegistryId(getDb(), registryId);
-  return { title: trial ? `${trial.registryId} · ${trial.title}` : "Trial not found" };
+  const meta = await getTrialMeta(getDb(), registryId);
+  return {
+    title: meta ? meta.title : "Trial not found",
+    description: meta?.description?.slice(0, 160),
+  };
 }
 
 export default async function TrialPage({ params }: PageProps<Params>) {

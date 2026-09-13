@@ -7,6 +7,7 @@ import { loadPersonalizationState } from "@/app/_lib/personalization-state";
 import { Section } from "@/app/_lib/section";
 import { entityKey } from "@/data/entities";
 import { getResearcherBySlug } from "@/data/researchers";
+import { getResearcherMeta } from "@/data/metadata";
 import { getDb } from "@/db/client";
 import { PATENT_STATUS_LABELS, PERSON_ROLE_LABELS } from "@/domain/enums";
 import { formatDate, pluralize } from "@/lib/format";
@@ -24,8 +25,11 @@ type Params = { slug: string };
 
 export async function generateMetadata({ params }: PageProps<Params>): Promise<Metadata> {
   const { slug } = await params;
-  const researcher = await getResearcherBySlug(getDb(), slug);
-  return { title: researcher ? researcher.fullName : "Researcher not found" };
+  const meta = await getResearcherMeta(getDb(), slug);
+  return {
+    title: meta ? meta.title : "Researcher not found",
+    description: meta?.description ?? undefined,
+  };
 }
 
 export default async function ResearcherPage({ params }: PageProps<Params>) {

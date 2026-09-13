@@ -5,6 +5,7 @@ import { z } from "zod";
 import type { PageProps } from "@/app/_lib/page-props";
 import { Section } from "@/app/_lib/section";
 import { getSource } from "@/data/sources";
+import { getSourceMeta } from "@/data/metadata";
 import { getDb } from "@/db/client";
 import {
   CONFIDENCE_LABELS,
@@ -33,8 +34,8 @@ async function loadSource(id: string) {
 
 export async function generateMetadata({ params }: PageProps<Params>): Promise<Metadata> {
   const { id } = await params;
-  const detail = await loadSource(id);
-  return { title: detail ? detail.source.title : "Source not found" };
+  const meta = z.uuid().safeParse(id).success ? await getSourceMeta(getDb(), id) : null;
+  return { title: meta ? meta.title : "Source not found" };
 }
 
 export default async function SourcePage({ params }: PageProps<Params>) {
@@ -97,6 +98,7 @@ export default async function SourcePage({ params }: PageProps<Params>) {
       >
         {claims.length === 0 ? (
           <EmptyState
+            headingLevel={3}
             title="No claims linked"
             description="This source is recorded but no claim has been attached to it yet."
           />

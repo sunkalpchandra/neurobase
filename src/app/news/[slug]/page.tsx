@@ -7,6 +7,7 @@ import { loadPersonalizationState } from "@/app/_lib/personalization-state";
 import { Section } from "@/app/_lib/section";
 import { entityKey } from "@/data/entities";
 import { getEventBySlug } from "@/data/events";
+import { getEventMeta } from "@/data/metadata";
 import { getDb } from "@/db/client";
 import { EVENT_TYPE_LABELS } from "@/domain/enums";
 import { formatDate, pluralize } from "@/lib/format";
@@ -27,10 +28,10 @@ type Params = { slug: string };
 
 export async function generateMetadata({ params }: PageProps<Params>): Promise<Metadata> {
   const { slug } = await params;
-  const event = await getEventBySlug(getDb(), slug);
+  const meta = await getEventMeta(getDb(), slug);
   return {
-    title: event ? event.title : "Development not found",
-    description: event?.summary.slice(0, 160),
+    title: meta ? meta.title : "Development not found",
+    description: meta?.description?.slice(0, 160),
   };
 }
 
@@ -118,6 +119,7 @@ export default async function EventPage({ params }: PageProps<Params>) {
           </ul>
         ) : (
           <EmptyState
+            headingLevel={3}
             title="No sources recorded"
             description="This development is not yet backed by a retrievable source."
           />

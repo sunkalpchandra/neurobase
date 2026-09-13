@@ -9,6 +9,7 @@ import { ProvenanceSections } from "@/app/_lib/provenance-sections";
 import { Section } from "@/app/_lib/section";
 import { entityKey } from "@/data/entities";
 import { getPatent } from "@/data/patents";
+import { getPatentMeta } from "@/data/metadata";
 import { getDb } from "@/db/client";
 import { PATENT_STATUS_LABELS } from "@/domain/enums";
 import { formatDate } from "@/lib/format";
@@ -29,11 +30,10 @@ async function load(id: string) {
 
 export async function generateMetadata({ params }: PageProps<Params>): Promise<Metadata> {
   const { id } = await params;
-  const patent = await load(id);
+  const meta = z.uuid().safeParse(id).success ? await getPatentMeta(getDb(), id) : null;
   return {
-    title: patent
-      ? `${patent.jurisdiction} ${patent.patentNumber} · ${patent.title}`
-      : "Patent not found",
+    title: meta ? meta.title : "Patent not found",
+    description: meta?.description?.slice(0, 160),
   };
 }
 

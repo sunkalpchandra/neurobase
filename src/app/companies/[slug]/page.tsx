@@ -5,6 +5,7 @@ import type { PageProps } from "@/app/_lib/page-props";
 import { loadPersonalizationState } from "@/app/_lib/personalization-state";
 import { getCompanyProfile } from "@/data/companies";
 import { entityKey } from "@/data/entities";
+import { getCompanyMeta } from "@/data/metadata";
 import { getDb } from "@/db/client";
 import { OPERATING_STATUS_LABELS, type OperatingStatus } from "@/domain/enums";
 import { formatDate } from "@/lib/format";
@@ -40,9 +41,9 @@ const STATUS_VARIANT: Record<OperatingStatus, BadgeVariant> = {
 
 export async function generateMetadata({ params }: PageProps<Params>): Promise<Metadata> {
   const { slug } = await params;
-  const profile = await getCompanyProfile(getDb(), slug);
-  if (!profile) return { title: "Company not found" };
-  return { title: profile.name, description: profile.description.slice(0, 160) };
+  const meta = await getCompanyMeta(getDb(), slug);
+  if (!meta) return { title: "Company not found" };
+  return { title: meta.title, description: meta.description?.slice(0, 160) };
 }
 
 const SECTIONS = [
