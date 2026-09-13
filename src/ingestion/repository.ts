@@ -65,7 +65,8 @@ export interface PublishResult {
 
 export interface EnsureOrganizationInput {
   name: string;
-  kind: OrganizationKind;
+  /** Null when the record names the organization without saying what kind of body it is. */
+  kind: OrganizationKind | null;
   /** ISO 3166-1 alpha-2, when the upstream record states one. */
   country: string | null;
   /** The record that named it; becomes the organization's first source. */

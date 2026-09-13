@@ -243,7 +243,24 @@ export function createDrizzleRepository(db: Database): IngestionRepository {
             ),
           )
           .limit(1);
-        if (byAlias) return byAlias.entityId;
+        if (byAlias) {
+          // A later source may state the kind an earlier one left unsaid. Fill the gap,
+          // but never overwrite a kind already on the record: the first source to state
+          // one is as good an authority as the second, and flip-flopping between them
+          // would make the value depend on ingestion order.
+          if (input.kind) {
+            await tx
+              .update(schema.organizations)
+              .set({ kind: input.kind, updatedAt: new Date() })
+              .where(
+                and(
+                  eq(schema.organizations.id, byAlias.entityId),
+                  isNull(schema.organizations.kind),
+                ),
+              );
+          }
+          return byAlias.entityId;
+        }
 
         const [row] = await tx
           .insert(schema.organizations)
