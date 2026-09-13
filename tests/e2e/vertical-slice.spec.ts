@@ -54,15 +54,15 @@ test("feed → search → company → profile → source", async ({ page }) => {
   await expect(page.getByRole("button", { name: /Save/ }).first()).toBeVisible();
   await expectNoHorizontalOverflow(page);
 
-  const ledger = page.locator("#sources");
-  const sourceLink = ledger.getByRole("link", { name: /Source record|record/i }).first();
-  if (await sourceLink.count()) {
-    await sourceLink.click();
-    await expect(page).toHaveURL(/\/sources\//);
-    await expect(page.getByRole("heading", { level: 2, name: "Provenance" })).toBeVisible();
-    await expect(
-      page.getByRole("heading", { level: 2, name: /Claims this source supports/ }),
-    ).toBeVisible();
-    await expectNoHorizontalOverflow(page);
-  }
+  // The source ledger links to NeuroBase's own record for the source, which is where the
+  // provenance trail ends: what the source says, and which claims rest on it.
+  const sourceLink = page.locator('main a[href^="/sources/"]').first();
+  await expect(sourceLink).toBeVisible();
+  await sourceLink.click();
+  await expect(page).toHaveURL(/\/sources\//);
+  await expect(page.getByRole("heading", { level: 2, name: "Provenance" })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { level: 2, name: /Claims this source supports/ }),
+  ).toBeVisible();
+  await expectNoHorizontalOverflow(page);
 });

@@ -45,7 +45,7 @@ test.describe("company directory", () => {
     await page.goto("/companies?sort=funding&direction=desc");
     await expect(page.getByText(/Showing 1–/)).toBeVisible();
     await page.goto("/companies?invasiveness=noninvasive");
-    await expect(page.getByText(/compan(y|ies) match/)).toBeVisible();
+    await expect(page.getByText(/compan(y|ies) match/).first()).toBeVisible();
     const cells = page.getByRole("table", { name: "Company directory" }).getByRole("cell");
     if (!isMobile(page) && (await cells.count()) > 0) {
       await expect(page.getByRole("table").getByText("Noninvasive").first()).toBeVisible();
