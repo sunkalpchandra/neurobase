@@ -348,7 +348,7 @@ describe("search coverage guarantees", () => {
   });
 
   it("has noninvasive stroke-rehabilitation devices", () => {
-    const conditionId = dataset.conditions.find((condition) => condition.slug === "stroke")?.id;
+    const conditionId = dataset.conditions.find((condition) => condition.slug === "fx-stroke")?.id;
     const strokeDeviceIds = new Set(
       dataset.deviceConditions
         .filter((link) => link.conditionId === conditionId)
@@ -380,7 +380,7 @@ describe("search coverage guarantees", () => {
 
   it("has companies working on peripheral nerve stimulation", () => {
     const categoryId = dataset.technologyCategories.find(
-      (category) => category.slug === "peripheral-nerve-stimulation",
+      (category) => category.slug === "fx-peripheral-nerve-stimulation",
     )?.id;
     const organizationIds = new Set(
       dataset.organizationTechnologyCategories
@@ -415,6 +415,8 @@ describe("search coverage guarantees", () => {
         .filter((category) => used.has(category.id ?? ""))
         .map((category) => category.slug),
     );
+    // Fixture slugs carry their own namespace so a database can hold both these rows and
+    // the real controlled vocabulary.
     for (const slug of [
       "deep-brain-stimulation",
       "spinal-cord-stimulation",
@@ -425,7 +427,7 @@ describe("search coverage guarantees", () => {
       "optogenetics",
       "endovascular-bcis",
     ]) {
-      expect(slugsInUse, slug).toContain(slug);
+      expect(slugsInUse, slug).toContain(`fx-${slug}`);
     }
   });
 });
