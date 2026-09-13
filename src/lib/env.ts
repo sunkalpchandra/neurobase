@@ -14,6 +14,15 @@ const envSchema = z.object({
     .string()
     .optional()
     .or(z.literal("").transform(() => undefined)),
+  ANTHROPIC_API_KEY: z
+    .string()
+    .optional()
+    .or(z.literal("").transform(() => undefined)),
+  /** Overrides the default model used by the Ask tab. */
+  ANSWER_MODEL: z
+    .string()
+    .optional()
+    .or(z.literal("").transform(() => undefined)),
   INGEST_CONTACT_EMAIL: z
     .string()
     .optional()
