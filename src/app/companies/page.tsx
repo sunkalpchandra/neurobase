@@ -74,6 +74,15 @@ function directoryHref(
   );
 }
 
+/** aria-sort value for a column, so the header cell announces state without hiding its name. */
+function sortState(
+  sortKey: CompanySortKey,
+  query: CompanyDirectoryQuery,
+): "ascending" | "descending" | "none" {
+  if (query.sort !== sortKey) return "none";
+  return query.direction === "asc" ? "ascending" : "descending";
+}
+
 function SortHeader({
   label,
   sortKey,
@@ -91,7 +100,7 @@ function SortHeader({
         directoryHref(query, { sort: sortKey, direction: nextDirection, cursor: null }),
       )}
       className={cn("inline-flex items-center gap-1 hover:text-ink", active && "text-ink")}
-      aria-label={`Sort by ${label.toLowerCase()}, ${nextDirection === "asc" ? "ascending" : "descending"}`}
+      title={`Sort by ${label.toLowerCase()}, ${nextDirection === "asc" ? "ascending" : "descending"}`}
     >
       {label}
       {active ? <span aria-hidden="true">{query.direction === "asc" ? "↑" : "↓"}</span> : null}
@@ -221,6 +230,7 @@ export default async function CompaniesPage({ searchParams }: PageProps) {
     {
       key: "name",
       header: <SortHeader label="Company" sortKey="name" query={query} />,
+      ariaSort: sortState("name", query),
       cell: (company) => (
         <div className="flex flex-col">
           <Link
@@ -265,6 +275,7 @@ export default async function CompaniesPage({ searchParams }: PageProps) {
     {
       key: "funding",
       header: <SortHeader label="Disclosed funding" sortKey="funding" query={query} />,
+      ariaSort: sortState("funding", query),
       cell: (company) => formatUsdCompact(company.totalDisclosedFundingUsd),
       align: "right",
       width: "9rem",
@@ -272,6 +283,7 @@ export default async function CompaniesPage({ searchParams }: PageProps) {
     {
       key: "verified",
       header: <SortHeader label="Last verified" sortKey="lastVerified" query={query} />,
+      ariaSort: sortState("lastVerified", query),
       cell: (company) => <FormattedDate value={company.lastVerifiedAt} />,
       width: "8rem",
     },

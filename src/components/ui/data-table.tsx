@@ -13,6 +13,8 @@ export interface DataTableColumn<Row> {
   width?: string;
   /** Keep the header for assistive technology only (e.g. an actions column). */
   srOnlyHeader?: boolean;
+  /** Sort state, announced on the header cell. Omit for columns that do not sort. */
+  ariaSort?: "ascending" | "descending" | "none";
 }
 
 export interface DataTableProps<Row> {
@@ -67,6 +69,7 @@ export function DataTable<Row>({
                 <th
                   key={column.key}
                   scope="col"
+                  aria-sort={column.ariaSort}
                   style={column.width ? { width: column.width } : undefined}
                   className={cn(
                     "border-b border-line px-3 py-2 font-medium",
