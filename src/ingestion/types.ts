@@ -47,6 +47,7 @@ export interface StageCounts {
   duplicates: number;
   unresolved: number;
   organizations: number;
+  devices: number;
   published: number;
   queued: number;
 }

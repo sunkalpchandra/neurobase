@@ -1,6 +1,8 @@
 import type { OrganizationKind } from "@/domain/enums";
 import { naturalKey, recordTitle, type NormalizedRecord } from "./normalized";
 import type { IngestionRepository } from "./repository";
+import { classifyCategories, classifyConditions } from "./stages/classify";
+import { looksLikePersonName } from "./stages/resolve-entities";
 import {
   buildClaims,
   buildEvent,
@@ -13,6 +15,20 @@ import {
   validate,
 } from "./stages";
 import type { PipelineOptions, PipelineReport, StageCounts } from "./types";
+
+/**
+ * Device names the record states outright. Only fields the upstream labelled as a device
+ * count: a device mentioned in prose is a guess, and guesses are not records.
+ */
+function deviceNamesIn(record: NormalizedRecord): string[] {
+  const names = record.kind === "regulatory_action" && record.deviceName ? [record.deviceName] : [];
+  const mentioned = record.mentions.deviceNames;
+  return [
+    ...new Set(
+      [...names, ...mentioned].map((name) => name.trim()).filter((name) => name.length > 2),
+    ),
+  ];
+}
 
 /** The kind an organization named by this record most likely is. */
 function organizationKindFor(record: NormalizedRecord): OrganizationKind {
@@ -36,6 +52,7 @@ function emptyCounts(): StageCounts {
     duplicates: 0,
     unresolved: 0,
     organizations: 0,
+    devices: 0,
     published: 0,
     queued: 0,
   };
@@ -120,6 +137,11 @@ export async function runPipeline(
       }
 
       const mentions = extractEntities(record);
+      // Conditions the record's own text names, matched through the vocabulary's synonyms,
+      // in addition to whatever the upstream labelled.
+      mentions.conditionNames = [
+        ...new Set([...mentions.conditionNames, ...classifyConditions(record)]),
+      ];
       const resolution = await resolveEntities(repository, mentions);
 
       const claims = buildClaims(record);
@@ -163,8 +185,25 @@ export async function runPipeline(
           counts.organizations += 1;
         }
       }
+      const recording = createOrganizations && authoritative;
       for (const unresolved of resolution.unresolved) {
-        if (unresolved.kind === "organization" && createOrganizations && authoritative) {
+        // Devices named by an authoritative record are recorded below, not queued.
+        if (unresolved.kind === "device" && recording) continue;
+        // A registry sponsor that is a person's name is not an organization.
+        if (
+          unresolved.kind === "organization" &&
+          recording &&
+          looksLikePersonName(unresolved.name)
+        ) {
+          counts.unresolved += 1;
+          await queue(
+            { kind: record.kind, upstreamId: outcome.raw.upstreamId },
+            `"${unresolved.name}" looks like an individual rather than an organization`,
+            { naturalKey: naturalKey(record), name: unresolved.name },
+          );
+          continue;
+        }
+        if (unresolved.kind === "organization" && recording) {
           const organizationId = await repository.ensureOrganization({
             name: unresolved.name,
             kind: organizationKindFor(record),
@@ -186,6 +225,22 @@ export async function runPipeline(
         });
       }
 
+      // A device an authoritative record names — an FDA clearance's device, a registry
+      // intervention — exists, even though the record says nothing else about it.
+      if (createOrganizations && authoritative) {
+        for (const deviceName of deviceNamesIn(record)) {
+          const deviceId = await repository.ensureDevice({
+            name: deviceName,
+            developerOrganizationId: resolution.links.organizationId,
+            sourceId,
+            description: `${deviceName} is named by ${record.publisher} in "${record.sourceTitle}".`,
+          });
+          if (!resolution.links.deviceIds.includes(deviceId))
+            resolution.links.deviceIds.push(deviceId);
+          counts.devices += 1;
+        }
+      }
+
       const links = connectRelationships(record, resolution.links);
       const event = buildEvent(record, { relatedEntityCount: links.length, asOf, sourceId });
       const result = await repository.publish({
@@ -194,6 +249,7 @@ export async function runPipeline(
         links: resolution.links,
         claims,
         event,
+        categorySlugs: classifyCategories(record),
       });
       if (result.updated) counts.duplicates += 1;
       else counts.published += 1;
