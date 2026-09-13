@@ -22,7 +22,10 @@
     "db:seed": "tsx scripts/seed.ts",
     "db:reset": "tsx scripts/reset.ts",
     "ingest": "tsx scripts/ingest.ts",
-    "verify": "npm run format:check && npm run lint && npm run typecheck && npm run test && npm run build"
+    "verify": "npm run format:check && npm run lint && npm run typecheck && npm run test && npm run build",
+    "corpus": "tsx scripts/corpus.ts",
+    "db:wipe": "tsx scripts/reset.ts",
+    "db:reference": "tsx scripts/seed-reference.ts"
   },
   "dependencies": {
     "drizzle-orm": "0.45.2",
