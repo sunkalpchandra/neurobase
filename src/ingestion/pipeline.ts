@@ -2,7 +2,7 @@ import type { OrganizationKind } from "@/domain/enums";
 import { naturalKey, recordTitle, type NormalizedRecord } from "./normalized";
 import type { IngestionRepository } from "./repository";
 import { classifyCategories, classifyConditions } from "./stages/classify";
-import { looksLikePersonName } from "./stages/resolve-entities";
+import { looksLikePersonName, sourceAllowsIndividuals } from "./stages/resolve-entities";
 import {
   buildClaims,
   buildEvent,
@@ -30,17 +30,39 @@ function deviceNamesIn(record: NormalizedRecord): string[] {
   ];
 }
 
-/** The kind an organization named by this record most likely is. */
-function organizationKindFor(record: NormalizedRecord): OrganizationKind {
+/**
+ * ClinicalTrials.gov sponsor classes that determine a kind on their own. NETWORK, OTHER,
+ * AMBIG and UNKNOWN are deliberately absent: "OTHER" covers universities, hospitals and
+ * foundations alike, and picking one of them would be a guess wearing the clothes of a
+ * fact.
+ */
+const SPONSOR_CLASS_KINDS: Record<string, OrganizationKind> = {
+  INDUSTRY: "company",
+  NIH: "government_agency",
+  FED: "government_agency",
+  OTHER_GOV: "government_agency",
+};
+
+/**
+ * The kind a record states an organization is, or null when it states nothing.
+ *
+ * Null is the honest answer far more often than it looks. This used to return "company"
+ * for everything a trial or a clearance named, which is how 229 universities, hospitals
+ * and institutes came to be labelled companies in a database whose whole claim is that it
+ * does not invent values. An unknown kind is now an absence, and the interface shows it
+ * as one.
+ */
+function organizationKindFor(record: NormalizedRecord): OrganizationKind | null {
   switch (record.kind) {
     case "clinical_trial":
-      return "company";
-    case "publication":
-      return "research_lab";
+      return record.sponsorClass ? (SPONSOR_CLASS_KINDS[record.sponsorClass] ?? null) : null;
+    // The applicant on a 510(k) or PMA is the commercial entity that holds the clearance.
     case "regulatory_action":
       return "company";
+    // An author's affiliation may be a university, a hospital or a company, and an
+    // indexed paper does not say which.
     default:
-      return "company";
+      return null;
   }
 }
 
@@ -189,10 +211,14 @@ export async function runPipeline(
       for (const unresolved of resolution.unresolved) {
         // Devices named by an authoritative record are recorded below, not queued.
         if (unresolved.kind === "device" && recording) continue;
-        // A registry sponsor that is a person's name is not an organization.
+        // A registry sponsor that is a person's name is not an organization. Only asked
+        // of sources where an individual is actually possible: an FDA applicant is a
+        // corporate entity by definition, so the name-shape guess there was wrong every
+        // time it fired.
         if (
           unresolved.kind === "organization" &&
           recording &&
+          sourceAllowsIndividuals(record.sourceType) &&
           looksLikePersonName(unresolved.name)
         ) {
           counts.unresolved += 1;
