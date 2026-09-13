@@ -1,5 +1,15 @@
 import { Skeleton, SkeletonLines } from "@/components/ui/skeleton";
 
+/**
+ * This lives in a `(list)` route group, not in `companies/`, on purpose.
+ *
+ * A `loading.tsx` at the segment level wraps every route beneath it, including
+ * `companies/[slug]`. That Suspense boundary makes Next flush the shell — and with it
+ * the 200 — before the page body runs, so `notFound()` on an unknown company could no
+ * longer set the status: `/companies/does-not-exist` answered 200 with a skeleton.
+ * The group scopes the boundary to the list page, which is the only page it was for.
+ */
+
 export default function CompaniesLoading() {
   return (
     <div
