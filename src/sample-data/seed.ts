@@ -55,12 +55,16 @@ export async function seedDatabase(db: Database, dataset: SampleDataset): Promis
       counts[key] = rows.length;
       if (!rows.length) continue;
       const table = schema[tableName];
+      // The vocabulary is shared by every fixture dataset and its ids come from the slug,
+      // so a row already present is the same row: skip it rather than failing the load.
+      const skipExisting = key === "technologyCategories" || key === "conditions";
       for (let offset = 0; offset < rows.length; offset += BATCH_SIZE) {
         const batch = rows.slice(offset, offset + BATCH_SIZE);
         // The INSERT_ORDER pairs are typed above; the row type matches the table by construction.
-        await tx
+        const insert = tx
           .insert(table as typeof schema.sources)
           .values(batch as (typeof schema.sources.$inferInsert)[]);
+        await (skipExisting ? insert.onConflictDoNothing() : insert);
       }
     }
   });
