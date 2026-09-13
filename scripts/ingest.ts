@@ -11,6 +11,7 @@ import { createDrizzleRepository } from "../src/ingestion/repository-drizzle";
  *   npm run ingest -- --list
  *   npm run ingest -- --adapter clinicaltrials --query "brain computer interface" --limit 25
  *   npm run ingest -- --adapter pubmed --query "neural decoding" --limit 10 --dry-run
+ *   npm run ingest -- --adapter openalex --query "brain-computer interface" --limit 50 --create-organizations
  */
 const { values } = parseArgs({
   options: {
@@ -18,6 +19,7 @@ const { values } = parseArgs({
     query: { type: "string" },
     limit: { type: "string", default: "25" },
     "dry-run": { type: "boolean", default: false },
+    "create-organizations": { type: "boolean", default: false },
     list: { type: "boolean", default: false },
   },
 });
@@ -73,6 +75,7 @@ async function main(): Promise<void> {
     query: values.query,
     limit,
     dryRun,
+    createOrganizations: values["create-organizations"] === true,
   });
 
   console.log("\nCounts");
