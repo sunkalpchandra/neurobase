@@ -1,4 +1,4 @@
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { eq } from "drizzle-orm";
 import { getDb } from "@/db/client";
 import { userProfiles } from "@/db/schema";
@@ -25,6 +25,22 @@ export async function getProfileId(): Promise<string | null> {
   return row?.id ?? null;
 }
 
+/**
+ * A Secure cookie is dropped by browsers over plain HTTP, which would silently break
+ * local production runs (`npm run build && npm start`) and the end-to-end suite: every
+ * write would create a fresh profile the next request could not find. Mark the cookie
+ * Secure unless the request is a plain-HTTP one to a loopback host.
+ */
+async function shouldUseSecureCookie(): Promise<boolean> {
+  const store = await headers();
+  const proto = store.get("x-forwarded-proto")?.split(",")[0]?.trim();
+  if (proto) return proto === "https";
+  const host = store.get("host")?.split(":")[0]?.toLowerCase() ?? "";
+  const loopback =
+    host === "localhost" || host === "127.0.0.1" || host === "[::1]" || host === "::1";
+  return !loopback;
+}
+
 /** Only call from a Server Action or Route Handler: setting cookies requires a response. */
 export async function getOrCreateProfileId(): Promise<string> {
   const existing = await getProfileId();
@@ -39,7 +55,7 @@ export async function getOrCreateProfileId(): Promise<string> {
   store.set(PROFILE_COOKIE, created.id, {
     httpOnly: true,
     sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
+    secure: await shouldUseSecureCookie(),
     path: "/",
     maxAge: ONE_YEAR_SECONDS,
   });
