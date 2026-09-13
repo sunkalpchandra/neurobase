@@ -350,7 +350,19 @@ export function createDrizzleRepository(db: Database): IngestionRepository {
         const { record } = input;
         const entityType = entityTypeOf(record);
         const { entityId, updated } = await upsertEntity(tx, input);
+        // The categories a record's text supports describe the record's subject, so they
+        // apply to the entity itself and to the organization and devices it names.
         await linkCategories(tx, entityType, entityId, input.categorySlugs);
+        for (const organizationId of new Set(
+          [input.links.organizationId, ...input.links.relatedOrganizationIds].filter(
+            (id): id is string => id !== null,
+          ),
+        )) {
+          await linkCategories(tx, "organization", organizationId, input.categorySlugs);
+        }
+        for (const deviceId of new Set(input.links.deviceIds)) {
+          await linkCategories(tx, "device", deviceId, input.categorySlugs);
+        }
 
         for (const claim of input.claims) {
           const [claimRow] = await tx
