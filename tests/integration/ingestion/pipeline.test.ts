@@ -20,6 +20,7 @@ const RETRIEVED = new Date("2026-09-12T09:00:00Z");
 let db: Database;
 let organizationId: string;
 let conditionId: string;
+let parkinsonId: string;
 
 function trial(index: number, sponsorName: string | null): NormalizedRecord {
   const registryId = `${TOKEN}-${index}`;
@@ -111,6 +112,21 @@ async function cleanUp(): Promise<void> {
   await db
     .delete(schema.conditions)
     .where(like(schema.conditions.slug, `%${TOKEN.toLowerCase()}%`));
+  // entity_aliases has no foreign key, so a condition's aliases must go explicitly or
+  // they outlive it and resolve to a row that no longer exists.
+  await db
+    .delete(schema.entityAliases)
+    .where(
+      and(
+        eq(schema.entityAliases.entityType, "condition"),
+        eq(schema.entityAliases.normalized, "parkinson disease"),
+      ),
+    );
+  await db.delete(schema.devices).where(like(schema.devices.name, `%${TOKEN}%`));
+  await db
+    .delete(schema.technologyCategories)
+    .where(eq(schema.technologyCategories.slug, "deep-brain-stimulation"));
+  await db.delete(schema.organizations).where(eq(schema.organizations.name, "Rowan Ashfield"));
   await db.delete(schema.organizations).where(like(schema.organizations.name, `%${TOKEN}%`));
 }
 
@@ -142,6 +158,33 @@ beforeAll(async () => {
     })
     .returning({ id: schema.conditions.id });
   conditionId = condition!.id;
+
+  // A condition carrying the registry spelling as an alias: this is how the classifier's
+  // output resolves onto the vocabulary. Slugged with the run token so it collides with
+  // neither the reference vocabulary nor another suite.
+  const [parkinson] = await db
+    .insert(schema.conditions)
+    .values({
+      slug: `parkinson-disease-${TOKEN.toLowerCase()}`,
+      name: `Parkinson disease ${TOKEN}`,
+      category: "motor",
+    })
+    .returning({ id: schema.conditions.id });
+  parkinsonId = parkinson!.id;
+
+  // Categories are matched by their canonical slug, so the classifier's output needs the
+  // real vocabulary row present. Integration suites run one file at a time and this one
+  // removes the rows it added, so the fixtures cannot collide with another suite's.
+  await db
+    .insert(schema.technologyCategories)
+    .values({ slug: "deep-brain-stimulation", name: "Deep brain stimulation" })
+    .onConflictDoNothing();
+  await db.insert(schema.entityAliases).values({
+    entityType: "condition",
+    entityId: parkinsonId,
+    alias: "Parkinson Disease",
+    normalized: "parkinson disease",
+  });
 });
 
 afterAll(async () => {
@@ -286,5 +329,114 @@ describe("ingestion pipeline against PostgreSQL", () => {
     const matches = await repository.findSimilarOrganizations(nearMatch, 0.6);
     expect(matches[0]?.id).toBe(organizationId);
     expect(matches[0]?.similarity).toBeGreaterThan(0.6);
+  });
+});
+
+describe("recording entities from authoritative records", () => {
+  it("records the organization, device, category and conditions a trial states", async () => {
+    const repository = createDrizzleRepository(db);
+    const organizationName = `Recorded Neurotech ${TOKEN}`;
+    const deviceName = `Recorded DBS Lead ${TOKEN}`;
+    const base = trial(9, organizationName);
+    if (base.kind !== "clinical_trial") throw new Error("expected a trial");
+    const record: NormalizedRecord = {
+      ...base,
+      title: `Deep brain stimulation for Parkinson Disease ${TOKEN}`,
+      summary: "A study of deep brain stimulation in Parkinson Disease.",
+      mentions: {
+        organizationNames: [organizationName],
+        personNames: [],
+        conditionNames: [],
+        deviceNames: [deviceName],
+      },
+    };
+    const report = await runPipeline(repository, {
+      adapter: adapterFor([record]),
+      query: "deep brain stimulation",
+      limit: 5,
+      createOrganizations: true,
+    });
+    expect(report.counts.published).toBe(1);
+    expect(report.counts.organizations).toBeGreaterThan(0);
+    expect(report.counts.devices).toBeGreaterThan(0);
+
+    const [organization] = await db
+      .select()
+      .from(schema.organizations)
+      .where(eq(schema.organizations.name, organizationName));
+    expect(organization).toBeDefined();
+    expect(organization?.isSample).toBe(false);
+
+    const [device] = await db
+      .select()
+      .from(schema.devices)
+      .where(eq(schema.devices.name, deviceName));
+    expect(device).toBeDefined();
+    expect(device?.developerOrganizationId).toBe(organization?.id);
+    // Nothing beyond the name was stated, so the classified fields stay least-committal.
+    expect(device?.evidenceStage).toBe("concept");
+    expect(device?.confidence).toBe("low");
+
+    const [stored] = await db
+      .select()
+      .from(schema.clinicalTrials)
+      .where(
+        and(
+          eq(schema.clinicalTrials.registry, REGISTRY),
+          eq(schema.clinicalTrials.registryId, `${TOKEN}-9`),
+        ),
+      );
+    expect(stored?.sponsorOrganizationId).toBe(organization?.id);
+
+    // "Parkinson Disease" resolves through the vocabulary's recorded spellings.
+    const conditions = await db
+      .select({ slug: schema.conditions.slug })
+      .from(schema.trialConditions)
+      .innerJoin(schema.conditions, eq(schema.conditions.id, schema.trialConditions.conditionId))
+      .where(eq(schema.trialConditions.trialId, stored!.id));
+    expect(conditions.map((row) => row.slug)).toContain(`parkinson-disease-${TOKEN.toLowerCase()}`);
+
+    // The category comes from the record's own words, not from the query that found it.
+    const categories = await db
+      .select({ slug: schema.technologyCategories.slug })
+      .from(schema.deviceTechnologyCategories)
+      .innerJoin(
+        schema.technologyCategories,
+        eq(schema.technologyCategories.id, schema.deviceTechnologyCategories.categoryId),
+      )
+      .where(eq(schema.deviceTechnologyCategories.deviceId, device!.id));
+    expect(categories.map((row) => row.slug)).toContain("deep-brain-stimulation");
+  });
+
+  it("refuses to record an individual investigator as a company", async () => {
+    const repository = createDrizzleRepository(db);
+    const personName = `Rowan Ashfield${TOKEN.slice(0, 4)}`;
+    const record: NormalizedRecord = {
+      ...trial(10, `Rowan Ashfield`),
+      mentions: {
+        organizationNames: ["Rowan Ashfield"],
+        personNames: [],
+        conditionNames: [],
+        deviceNames: [],
+      },
+    };
+    void personName;
+    const report = await runPipeline(repository, {
+      adapter: adapterFor([record]),
+      query: "anything",
+      limit: 5,
+      createOrganizations: true,
+    });
+    expect(report.counts.published).toBe(1);
+    const rows = await db
+      .select()
+      .from(schema.organizations)
+      .where(eq(schema.organizations.name, "Rowan Ashfield"));
+    expect(rows).toHaveLength(0);
+    const queued = await db
+      .select()
+      .from(schema.reviewQueue)
+      .where(like(schema.reviewQueue.reason, "%looks like an individual%"));
+    expect(queued.length).toBeGreaterThan(0);
   });
 });
