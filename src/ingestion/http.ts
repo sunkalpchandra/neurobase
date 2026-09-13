@@ -65,6 +65,8 @@ export interface HttpClientOptions {
   burst?: number;
   timeoutMs?: number;
   maxRetries?: number;
+  /** First backoff step; doubles per retry when the server gives no Retry-After. */
+  baseBackoffMs?: number;
   /** Injected in tests; defaults to global fetch. */
   fetchImpl?: typeof fetch;
   sleep?: (ms: number) => Promise<void>;
@@ -74,11 +76,23 @@ export class HttpError extends Error {
   constructor(
     readonly status: number,
     readonly url: string,
+    /** Seconds the server asked us to wait, when it said. */
+    readonly retryAfterSeconds: number | null = null,
     message?: string,
   ) {
     super(message ?? `Request to ${url} failed with status ${status}`);
     this.name = "HttpError";
   }
+}
+
+/** Retry-After is either a delay in seconds or an HTTP date. */
+export function parseRetryAfter(header: string | null, now = Date.now()): number | null {
+  if (!header) return null;
+  const seconds = Number(header);
+  if (Number.isFinite(seconds) && seconds >= 0) return Math.min(seconds, 120);
+  const date = Date.parse(header);
+  if (Number.isNaN(date)) return null;
+  return Math.min(Math.max(0, Math.round((date - now) / 1000)), 120);
 }
 
 const RETRYABLE_STATUSES = new Set([408, 425, 429, 500, 502, 503, 504]);
@@ -104,6 +118,7 @@ export function createHttpClient(options: HttpClientOptions): HttpClient {
   const {
     timeoutMs = 15_000,
     maxRetries = 3,
+    baseBackoffMs = 250,
     fetchImpl = fetch,
     sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms)),
   } = options;
@@ -130,7 +145,13 @@ export function createHttpClient(options: HttpClientOptions): HttpClient {
           ...(init?.headers ?? {}),
         },
       });
-      if (!response.ok) throw new HttpError(response.status, url);
+      if (!response.ok) {
+        throw new HttpError(
+          response.status,
+          url,
+          parseRetryAfter(response.headers.get("retry-after")),
+        );
+      }
       return await response.json();
     } finally {
       clearTimeout(timer);
@@ -160,7 +181,9 @@ export function createHttpClient(options: HttpClientOptions): HttpClient {
             (error instanceof HttpError && RETRYABLE_STATUSES.has(error.status)) ||
             (error instanceof Error && (error.name === "AbortError" || error.name === "TypeError"));
           if (!retryable || retry === maxRetries || init?.signal?.aborted) break;
-          await sleep(2 ** retry * 250);
+          // A server that says how long to wait knows better than our backoff curve.
+          const askedFor = error instanceof HttpError ? error.retryAfterSeconds : null;
+          await sleep(askedFor !== null ? askedFor * 1000 : 2 ** retry * baseBackoffMs);
         }
       }
       throw lastError instanceof Error ? lastError : new Error(String(lastError));
