@@ -82,16 +82,21 @@ const ORGANIZATION_TERMS = [
 
 function buildPlan(scale: number): CorpusQuery[] {
   const take = (n: number) => Math.max(3, Math.round(n * scale));
+  // Ordered by how reliable the upstream is under load. OpenAlex throttles hard once a
+  // burst trips its limit, so it runs last: a block there then costs only its own
+  // records. The literature comes from three sources for the same reason — the research
+  // side of the corpus must not empty because one API is unavailable.
   return [
-    // Institutions first, so later records resolve against organizations that exist.
+    ...TOPICS.map((query) => ({ adapter: "clinicaltrials", query, limit: take(30) })),
+    ...DEVICE_TERMS.map((query) => ({ adapter: "openfda", query, limit: take(20) })),
+    ...TOPICS.map((query) => ({ adapter: "pubmed", query, limit: take(12) })),
+    ...TOPICS.slice(0, 12).map((query) => ({ adapter: "crossref", query, limit: take(12) })),
     ...ORGANIZATION_TERMS.map((query) => ({
       adapter: "openalex-institutions",
       query,
       limit: take(25),
     })),
-    ...TOPICS.map((query) => ({ adapter: "clinicaltrials", query, limit: take(30) })),
     ...TOPICS.map((query) => ({ adapter: "openalex", query, limit: take(24) })),
-    ...DEVICE_TERMS.map((query) => ({ adapter: "openfda", query, limit: take(20) })),
   ];
 }
 
