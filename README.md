@@ -43,6 +43,22 @@ migrate it too: `DATABASE_URL=postgres://localhost:5432/neurobase_test npm run d
 | `npm run ingest -- --list`                                                                 | Show ingestion adapters and their API / licensing status            |
 | `npm run ingest -- --adapter clinicaltrials --query "brain computer interface" --limit 25` | Run a connector                                                     |
 
+## Running it locally
+
+```bash
+npm run build
+npm run start -- -p 3100     # http://localhost:3100
+```
+
+`npm run dev` is the same app with hot reload. Both need PostgreSQL running and the
+database seeded (see Setup).
+
+NeuroBase cannot be published on GitHub Pages: every route is server-rendered against
+PostgreSQL at request time (search, filters, cursors, the feed) and the personalisation
+controls are server actions, none of which a static file host can run. Deploying it
+needs a Node host plus a Postgres instance — Vercel, Fly.io, Railway and a plain VPS all
+work; the `DATABASE_URL` in `.env` is the only required configuration.
+
 ## Documentation
 
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — layers, route map, conventions, cross-module contracts
