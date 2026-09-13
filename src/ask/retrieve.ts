@@ -15,6 +15,7 @@ export interface Retrieval {
 /** Strips the conversational wrapper so the retriever sees the content words. */
 const QUESTION_PREFIXES = [
   /^(can you |could you |please )?(tell me|explain|describe|summari[sz]e|give me|show me|list|find|what do you know)\b[^a-z0-9]*/i,
+  /^(about|regarding|on the topic of|with respect to)\b[^a-z0-9]*/i,
   /^(what|who|which|where|when|why|how)('s|s| is| are| was| were| do| does| did| can| could| should| many| much)?\b[^a-z0-9]*/i,
   /^(is|are|do|does|did|has|have|can|could|should)\b[^a-z0-9]*/i,
 ];
@@ -45,6 +46,10 @@ export async function retrieveForQuestion(
     filters: {},
     cursor: null,
     pageSize: limit,
+    // A question's phrasing should steer ranking, not hard-filter the evidence: asking
+    // about "companies developing implanted devices" must not exclude the trial that
+    // answers it. The interpretation is still reported, so the reader sees what was read.
+    applyInterpretedFilters: false,
   });
   return {
     results: response.results,
