@@ -7,6 +7,7 @@ import type {
   Invasiveness,
   Modality,
   OperatingStatus,
+  OrganizationKind,
 } from "@/domain/enums";
 import type {
   ClinicalTrialSummary,
@@ -38,6 +39,12 @@ export interface CompanyDirectoryQuery {
   developmentStage?: DevelopmentStage[];
   country?: string[];
   operatingStatus?: OperatingStatus[];
+  /**
+   * Organization types to include. "unstated" selects rows no source has classified,
+   * which is most of them — see the note on `organizations.kind`. Omitted entirely by
+   * the company directory, which pins the kind itself.
+   */
+  organizationKind?: Array<OrganizationKind | "unstated">;
   sort: CompanySortKey;
   direction: "asc" | "desc";
   cursor: string | null;

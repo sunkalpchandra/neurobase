@@ -90,6 +90,9 @@ export const companyDirectorySchema = z.object({
   developmentStage: list(z.enum(DEVELOPMENT_STAGES)),
   country: list(countryCode),
   operatingStatus: list(z.enum(OPERATING_STATUSES)),
+  // "unstated" is a real choice here, not a missing value: most organizations have no
+  // source that says what kind of body they are, and they must still be findable.
+  organizationKind: list(z.enum([...ORGANIZATION_KINDS, "unstated"])),
   sort: z.enum(COMPANY_SORT_KEYS).default("name"),
   direction: z.enum(["asc", "desc"]).default("asc"),
   cursor,

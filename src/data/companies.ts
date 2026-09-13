@@ -1,7 +1,7 @@
-import { and, asc, desc, eq, exists, ilike, inArray, or, sql, type SQL } from "drizzle-orm";
+import { and, asc, desc, eq, exists, ilike, inArray, isNull, or, sql, type SQL } from "drizzle-orm";
 import type { Database } from "@/db/client";
 import * as schema from "@/db/schema";
-import type { InterfaceType } from "@/domain/enums";
+import type { InterfaceType, OrganizationKind } from "@/domain/enums";
 import type {
   CompanyProfile,
   CompanySummary,
@@ -61,8 +61,26 @@ function likePattern(text: string): string {
   return `%${text.replace(/[\\%_]/g, (char) => `\\${char}`)}%`;
 }
 
+/**
+ * Restricts a directory to the organization types asked for. An absent filter means every
+ * type, which is what the organization directory wants; the company directory passes
+ * ["company"] and so keeps the shape it always had.
+ */
+function kindCondition(kinds: CompanyDirectoryQuery["organizationKind"]): SQL | undefined {
+  if (!kinds?.length) return undefined;
+  const named = kinds.filter((kind): kind is OrganizationKind => kind !== "unstated");
+  const wantsUnstated = kinds.includes("unstated");
+  const clauses: SQL[] = [];
+  if (named.length) clauses.push(inArray(companies.kind, named));
+  if (wantsUnstated) clauses.push(isNull(companies.kind) as SQL);
+  if (!clauses.length) return undefined;
+  return (clauses.length === 1 ? clauses[0] : or(...clauses)) as SQL;
+}
+
 function directoryConditions(db: Database, query: CompanyDirectoryQuery): SQL[] {
-  const conditions: SQL[] = [eq(companies.kind, "company")];
+  const conditions: SQL[] = [];
+  const kinds = kindCondition(query.organizationKind);
+  if (kinds) conditions.push(kinds);
   if (query.q) {
     const pattern = likePattern(query.q);
     conditions.push(
@@ -171,6 +189,7 @@ export async function toCompanySummaries(
     id: row.id,
     slug: row.slug,
     name: row.name,
+    kind: row.kind,
     description: row.description,
     technologyCategories: categories.get(row.id) ?? [],
     primaryIndication: row.primaryIndicationId
@@ -190,10 +209,15 @@ export async function toCompanySummaries(
   }));
 }
 
-export async function listCompanies(
+/**
+ * The organization directory. Facet counts are scoped to the same organization types as
+ * the listing, so a count never promises rows the current view cannot reach.
+ */
+export async function listOrganizations(
   db: Database,
   query: CompanyDirectoryQuery,
 ): Promise<CompanyDirectoryResult> {
+  const kindScope = kindCondition(query.organizationKind);
   const offset = decodeCursor(query.cursor);
   const where = and(...directoryConditions(db, query));
   const [rows, [countRow], categoryFacets, conditionFacets, countryFacets] = await Promise.all([
@@ -223,7 +247,7 @@ export async function listCompanies(
         companies,
         eq(companies.id, schema.organizationTechnologyCategories.organizationId),
       )
-      .where(eq(companies.kind, "company"))
+      .where(kindScope)
       .groupBy(schema.technologyCategories.slug, schema.technologyCategories.name)
       .orderBy(schema.technologyCategories.name),
     db
@@ -238,13 +262,13 @@ export async function listCompanies(
         eq(schema.conditions.id, schema.organizationConditions.conditionId),
       )
       .innerJoin(companies, eq(companies.id, schema.organizationConditions.organizationId))
-      .where(eq(companies.kind, "company"))
+      .where(kindScope)
       .groupBy(schema.conditions.slug, schema.conditions.name)
       .orderBy(schema.conditions.name),
     db
       .select({ code: companies.hqCountry, count: sql<number>`count(*)::int` })
       .from(companies)
-      .where(and(eq(companies.kind, "company"), sql`${companies.hqCountry} is not null`))
+      .where(and(kindScope, sql`${companies.hqCountry} is not null`))
       .groupBy(companies.hqCountry)
       .orderBy(desc(sql`count(*)`), companies.hqCountry),
   ]);
@@ -261,6 +285,18 @@ export async function listCompanies(
       ),
     },
   };
+}
+
+/**
+ * The company directory: the organization directory with the kind pinned. Only rows a
+ * source actually calls a company appear here — which is why `/organizations` exists for
+ * the universities, hospitals and agencies that no longer pass as one.
+ */
+export async function listCompanies(
+  db: Database,
+  query: CompanyDirectoryQuery,
+): Promise<CompanyDirectoryResult> {
+  return listOrganizations(db, { ...query, organizationKind: ["company"] });
 }
 
 export async function listRecentlyUpdatedCompanies(
