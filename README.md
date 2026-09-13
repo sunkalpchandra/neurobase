@@ -53,6 +53,7 @@ migrate it too: `DATABASE_URL=postgres://localhost:5432/neurobase_test npm run d
 | `npm run corpus:report`                                                                    | What the database holds, and what the last week added               |
 | `npm run db:fixtures`                                                                      | Load generated test fixtures instead of real data (tests only)      |
 | `npm run schedule:install` / `schedule:uninstall`                                          | Weekly local refresh via launchd                                    |
+| `npm run serve:install` / `serve:uninstall`                                                | Serve on :3100 via launchd, across logins                           |
 | `npm run ingest -- --list`                                                                 | Show ingestion adapters and their API / licensing status            |
 | `npm run ingest -- --adapter clinicaltrials --query "brain computer interface" --limit 25` | Run a connector                                                     |
 
@@ -65,6 +66,25 @@ npm run start -- -p 3100     # http://localhost:3100
 
 `npm run dev` is the same app with hot reload. Both need PostgreSQL running and the
 database seeded (see Setup).
+
+### Keeping it up
+
+That server dies with the shell that started it. To keep NeuroBase serving across logins
+and restarts, register it with launchd:
+
+```bash
+npm run build
+npm run serve:install        # http://localhost:3100, restarts if it dies
+npm run serve:uninstall      # removes it
+```
+
+The installer refuses to register a service with no build behind it, and the server waits
+for PostgreSQL to accept connections before it starts — at login launchd can reach it
+first, and a server that starts without its database serves errors rather than records.
+Logs land in `.serve-logs/serve.log`, rotated five generations deep on each restart.
+
+Set `NEUROBASE_PORT` to serve somewhere other than 3100. This is a LaunchAgent, so it
+starts at login rather than at boot and needs no `sudo`; it listens on localhost only.
 
 NeuroBase cannot be published on GitHub Pages: every route is server-rendered against
 PostgreSQL at request time (search, filters, cursors, the feed) and the personalisation
@@ -158,10 +178,3 @@ the records directly, grouped and cited, with no generated prose. Set `ANTHROPIC
 
 - `npm install` on npm 10.9 can fail with "Cannot read properties of null (reading
   'edgesOut')" for this dependency set; `--legacy-peer-deps` avoids the resolver bug.
-- An unknown company URL (`/companies/<unknown-slug>`) renders the correct "Page not
-  found" page but answers `200` instead of `404`. Next.js streams that route's shell
-  before `notFound()` resolves, which pins the status. The behaviour is specific to that
-  route path: an identical page placed at `/companies/zzz/[slug]` or at the top level
-  answers `404`, and the other seven detail routes answer `404` correctly. It is not
-  fixable from application code, because a page cannot set a response status in the App
-  Router. Everything a visitor sees — the page, its title, its links — is correct.
