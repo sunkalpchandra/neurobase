@@ -23,12 +23,15 @@ export const devices = pgTable(
     description: text("description").notNull().default(""),
     intendedFunction: text("intended_function").notNull().default(""),
     neuralTarget: text("neural_target").notNull().default(""),
-    interfaceType: interfaceTypeEnum("interface_type").notNull(),
-    invasiveness: invasivenessEnum("invasiveness").notNull(),
-    modality: modalityEnum("modality").notNull(),
+    // Nullable on purpose. A record that names a device rarely classifies it, and a
+    // default here would be shown as a fact: an implanted electrode listed as
+    // "noninvasive" is a factual error, where an em dash is the truth.
+    interfaceType: interfaceTypeEnum("interface_type"),
+    invasiveness: invasivenessEnum("invasiveness"),
+    modality: modalityEnum("modality"),
     intendedUsers: text("intended_users").notNull().default(""),
-    developmentStage: developmentStageEnum("development_stage").notNull(),
-    evidenceStage: evidenceStageEnum("evidence_stage").notNull(),
+    developmentStage: developmentStageEnum("development_stage"),
+    evidenceStage: evidenceStageEnum("evidence_stage"),
     knownLimitations: text("known_limitations").array().notNull().default([]),
     ...provenanceColumns,
   },

@@ -167,12 +167,13 @@ export interface DeviceSummary extends Provenance {
   description: string;
   intendedFunction: string;
   neuralTarget: string;
-  interfaceType: InterfaceType;
-  invasiveness: Invasiveness;
-  modality: Modality;
+  /** Null where no record classifies the device; the interface shows an em dash. */
+  interfaceType: InterfaceType | null;
+  invasiveness: Invasiveness | null;
+  modality: Modality | null;
   intendedUsers: string;
-  developmentStage: DevelopmentStage;
-  evidenceStage: EvidenceStage;
+  developmentStage: DevelopmentStage | null;
+  evidenceStage: EvidenceStage | null;
   knownLimitations: string[];
   developer: OrganizationRef | null;
   conditions: ConditionRef[];
