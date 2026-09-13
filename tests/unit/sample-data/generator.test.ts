@@ -369,7 +369,13 @@ describe("search coverage guarantees", () => {
       "regulatory_authorization",
       "clinical_or_commercial_use",
     ];
-    expect(retinal.every((device) => humanStages.includes(device.evidenceStage))).toBe(true);
+    // Fixtures always classify a device, even though ingested devices may not.
+    expect(
+      retinal.every(
+        (device) =>
+          Boolean(device.evidenceStage) && humanStages.includes(device.evidenceStage ?? ""),
+      ),
+    ).toBe(true);
   });
 
   it("has companies working on peripheral nerve stimulation", () => {

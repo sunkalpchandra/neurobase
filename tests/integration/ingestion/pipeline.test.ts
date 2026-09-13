@@ -373,8 +373,11 @@ describe("recording entities from authoritative records", () => {
       .where(eq(schema.devices.name, deviceName));
     expect(device).toBeDefined();
     expect(device?.developerOrganizationId).toBe(organization?.id);
-    // Nothing beyond the name was stated, so the classified fields stay least-committal.
-    expect(device?.evidenceStage).toBe("concept");
+    // The trial named the device and classified nothing about it, so every classified
+    // field is null: an absence, not a default that would read as a fact.
+    expect(device?.evidenceStage).toBeNull();
+    expect(device?.invasiveness).toBeNull();
+    expect(device?.interfaceType).toBeNull();
     expect(device?.confidence).toBe("low");
 
     const [stored] = await db
