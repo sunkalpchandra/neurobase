@@ -32,16 +32,16 @@ migrate it too: `DATABASE_URL=postgres://localhost:5432/neurobase_test npm run d
 
 ## Commands
 
-| Command | Purpose |
-| --- | --- |
-| `npm run dev` / `npm run build` / `npm start` | Next.js development server, production build, production server |
-| `npm run lint`, `npm run typecheck`, `npm run format:check` | ESLint, `tsc --noEmit`, Prettier |
-| `npm test` | Vitest: unit, component (jsdom) and integration (Postgres) projects |
-| `npm run test:e2e` | Playwright at 1440, 1024 and 390 px against a production build |
-| `npm run verify` | Everything above except end-to-end, then a production build |
-| `npm run db:generate` / `db:migrate` / `db:seed` / `db:reset` | Drizzle migrations, sample data, wipe |
-| `npm run ingest -- --list` | Show ingestion adapters and their API / licensing status |
-| `npm run ingest -- --adapter clinicaltrials --query "brain computer interface" --limit 25` | Run a connector |
+| Command                                                                                    | Purpose                                                             |
+| ------------------------------------------------------------------------------------------ | ------------------------------------------------------------------- |
+| `npm run dev` / `npm run build` / `npm start`                                              | Next.js development server, production build, production server     |
+| `npm run lint`, `npm run typecheck`, `npm run format:check`                                | ESLint, `tsc --noEmit`, Prettier                                    |
+| `npm test`                                                                                 | Vitest: unit, component (jsdom) and integration (Postgres) projects |
+| `npm run test:e2e`                                                                         | Playwright at 1440, 1024 and 390 px against a production build      |
+| `npm run verify`                                                                           | Everything above except end-to-end, then a production build         |
+| `npm run db:generate` / `db:migrate` / `db:seed` / `db:reset`                              | Drizzle migrations, sample data, wipe                               |
+| `npm run ingest -- --list`                                                                 | Show ingestion adapters and their API / licensing status            |
+| `npm run ingest -- --adapter clinicaltrials --query "brain computer interface" --limit 25` | Run a connector                                                     |
 
 ## Documentation
 
@@ -80,3 +80,10 @@ reviews it.
 
 - `npm install` on npm 10.9 can fail with "Cannot read properties of null (reading
   'edgesOut')" for this dependency set; `--legacy-peer-deps` avoids the resolver bug.
+- An unknown company URL (`/companies/<unknown-slug>`) renders the correct "Page not
+  found" page but answers `200` instead of `404`. Next.js streams that route's shell
+  before `notFound()` resolves, which pins the status. The behaviour is specific to that
+  route path: an identical page placed at `/companies/zzz/[slug]` or at the top level
+  answers `404`, and the other seven detail routes answer `404` correctly. It is not
+  fixable from application code, because a page cannot set a response status in the App
+  Router. Everything a visitor sees — the page, its title, its links — is correct.
