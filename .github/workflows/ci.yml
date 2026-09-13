@@ -38,7 +38,8 @@ jobs:
       - run: npm run db:migrate
       - run: npm test
       - run: npm run build
-      - run: npm run db:seed -- --scale 0.2
+      - run: npm run db:reference
+      - run: npm run db:fixtures -- --scale 0.2
       - run: npx playwright install --with-deps chromium
       - run: npm run test:e2e
       - uses: actions/upload-artifact@v4
