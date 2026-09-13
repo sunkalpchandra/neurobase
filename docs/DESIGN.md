@@ -9,21 +9,21 @@ entity data), PubMed and ClinicalTrials.gov (metadata presentation), Stripe docs
 
 Defined in `src/app/globals.css` under `@theme` and exposed as Tailwind utilities.
 
-| Token | Value | Use |
-| --- | --- | --- |
-| `canvas` | #f7f8fa | Page background |
-| `surface` | #ffffff | Panels, tables, cards |
-| `surface-muted` | #f1f3f6 | Table headers, code, subdued areas |
-| `surface-hover` | #f4f6f9 | Row hover |
-| `ink` | #14171d | Primary text |
-| `ink-secondary` | #4a5261 | Secondary text, descriptions |
-| `ink-muted` | #6b7382 | Metadata, timestamps, placeholders |
-| `line` / `line-strong` / `line-soft` | #d9dee6 / #b9c1cd / #e8ebf0 | Borders |
-| `accent` / `accent-strong` / `accent-soft` / `accent-line` | #274690 … | Links, primary buttons, selected states |
-| `success` (+ `-soft`, `-line`) | #2f7a4d | Verified, authorized, recruiting, granted |
-| `warning` (+ `-soft`, `-line`) | #8f6408 | Estimated, pending, unverified, suspended |
-| `critical` (+ `-soft`, `-line`) | #b12a22 | Retracted, disputed, terminated, withdrawn |
-| `match` | #fff3bf | Search-match highlight background |
+| Token                                                      | Value                       | Use                                                                          |
+| ---------------------------------------------------------- | --------------------------- | ---------------------------------------------------------------------------- |
+| `canvas`                                                   | #f7f8fa                     | Page background                                                              |
+| `surface`                                                  | #ffffff                     | Panels, tables, cards                                                        |
+| `surface-muted`                                            | #f1f3f6                     | Table headers, code, subdued areas                                           |
+| `surface-hover`                                            | #f4f6f9                     | Row hover                                                                    |
+| `ink`                                                      | #14171d                     | Primary text                                                                 |
+| `ink-secondary`                                            | #4a5261                     | Secondary text, descriptions                                                 |
+| `ink-muted`                                                | #646c7a                     | Metadata, timestamps, placeholders (4.76:1 on the lightest surface, WCAG AA) |
+| `line` / `line-strong` / `line-soft`                       | #d9dee6 / #b9c1cd / #e8ebf0 | Borders                                                                      |
+| `accent` / `accent-strong` / `accent-soft` / `accent-line` | #274690 …                   | Links, primary buttons, selected states                                      |
+| `success` (+ `-soft`, `-line`)                             | #2f7a4d                     | Verified, authorized, recruiting, granted                                    |
+| `warning` (+ `-soft`, `-line`)                             | #8f6408                     | Estimated, pending, unverified, suspended                                    |
+| `critical` (+ `-soft`, `-line`)                            | #b12a22                     | Retracted, disputed, terminated, withdrawn                                   |
+| `match`                                                    | #fff3bf                     | Search-match highlight background                                            |
 
 Radii: `xs` 2px, `sm` 3px, `md` 4px, `lg` 6px. Nothing larger except fully round
 avatars. Shadows: `shadow-panel` (1px) for sticky headers, `shadow-overlay` for
@@ -36,14 +36,14 @@ colour alone. Do not introduce additional hues.
 
 Geist Sans for the interface, Geist Mono for identifiers (NCT ids, patent numbers, DOIs).
 
-| Role | Class | Notes |
-| --- | --- | --- |
-| Page title | `text-xl font-semibold tracking-tight` | One per page, describes content |
-| Section title | `text-base font-semibold` | Sentence case |
-| Body | `text-sm` (14px) | Default |
-| Metadata | `text-xs text-ink-muted` | 12px, compact rows |
-| Micro label | `text-2xs uppercase tracking-wide text-ink-muted` | Column headers, type labels |
-| Numbers in tables | add `tabular` | Right-aligned |
+| Role              | Class                                             | Notes                           |
+| ----------------- | ------------------------------------------------- | ------------------------------- |
+| Page title        | `text-xl font-semibold tracking-tight`            | One per page, describes content |
+| Section title     | `text-base font-semibold`                         | Sentence case                   |
+| Body              | `text-sm` (14px)                                  | Default                         |
+| Metadata          | `text-xs text-ink-muted`                          | 12px, compact rows              |
+| Micro label       | `text-2xs uppercase tracking-wide text-ink-muted` | Column headers, type labels     |
+| Numbers in tables | add `tabular`                                     | Right-aligned                   |
 
 Line length on reading surfaces (summaries, abstracts): `max-w-prose` (65ch).
 
