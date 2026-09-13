@@ -84,10 +84,6 @@ export async function buildDeviceDocuments(ctx: IndexContext): Promise<SearchDoc
         device.intendedFunction,
         device.neuralTarget,
         device.intendedUsers,
-        interfaceLabel,
-        developer?.name,
-        ...conditionNames,
-        ...categoryNames,
         ...device.knownLimitations,
       ]),
       metadata: metadataPairs([

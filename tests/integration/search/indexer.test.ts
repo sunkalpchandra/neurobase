@@ -301,10 +301,14 @@ describe("search indexer", () => {
     expect(doc?.technologyCategories).toEqual([`cat-${T}`]);
     expect(doc?.conditions).toEqual([`cond-${T}`]);
     expect(doc?.invasiveness).toBe("invasive");
-    expect(doc?.body).toContain(`Device ${T}`);
-    expect(doc?.body).toContain(`Category ${T}`);
-    expect(doc?.body).toContain("Electrocorticography (ECoG)");
+    // body carries prose only, because it is what snippets are drawn from; joined names
+    // and labels stay searchable through keywords, which the tsvector weights higher.
+    expect(doc?.body).toContain("building implant");
+    expect(doc?.body).not.toContain(`Category ${T}`);
     expect(doc?.keywords).toContain(`Org ${T} AG`);
+    expect(doc?.keywords).toContain(`Device ${T}`);
+    expect(doc?.keywords).toContain(`Category ${T}`);
+    expect(doc?.keywords).toContain("Electrocorticography (ECoG)");
     expect(doc?.entities).toEqual([
       { type: "device", id: ids.device, href: `/devices/device-${T}`, name: `Device ${T}` },
       {
@@ -419,7 +423,8 @@ describe("search indexer", () => {
     const person = await document("researcher", ids.person);
     expect(person?.href).toBe(`/researchers/person-${T}`);
     expect(person?.subtitle).toBe(`Principal investigator · University ${T}`);
-    expect(person?.keywords).toEqual(["speech decoding", "ecog"]);
+    // The employer joins the researcher's keywords so a search for the lab finds them.
+    expect(person?.keywords).toEqual([`University ${T}`, "speech decoding", "ecog"]);
     expect(person?.country).toBe("US");
   });
 

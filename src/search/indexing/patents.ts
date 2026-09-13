@@ -101,16 +101,7 @@ export async function buildPatentDocuments(ctx: IndexContext): Promise<SearchDoc
       title: patent.title,
       subtitle: assignee?.name ?? number,
       description: shortDescription(patent.abstract),
-      body: joinText([
-        patent.title,
-        patent.abstract,
-        assignee?.name,
-        patent.patentNumber,
-        patent.applicationNumber,
-        statusLabel,
-        ...inventors.map((inventor) => inventor.fullName),
-        ...linkedDevices.map((device) => device.name),
-      ]),
+      body: joinText([patent.title, patent.abstract]),
       metadata: metadataPairs([
         ["Number", number],
         ["Status", statusLabel],
@@ -130,6 +121,9 @@ export async function buildPatentDocuments(ctx: IndexContext): Promise<SearchDoc
       keywords: unique([
         patent.patentNumber,
         patent.applicationNumber,
+        statusLabel,
+        assignee?.name,
+        ...inventors.map((inventor) => inventor.fullName),
         ...linkedDevices.map((device) => device.name),
       ]),
       technologyCategories: facets.categories,

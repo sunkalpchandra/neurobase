@@ -124,18 +124,7 @@ export async function buildPublicationDocuments(ctx: IndexContext): Promise<Sear
           ? subtitleParts.join(" · ")
           : PUBLICATION_TYPE_LABELS[publication.publicationType],
       description: shortDescription(publication.abstract),
-      body: joinText([
-        publication.title,
-        publication.abstract,
-        publication.journal,
-        publication.doi,
-        publication.pmid,
-        PUBLICATION_TYPE_LABELS[publication.publicationType],
-        studyType,
-        ...authors.map((author) => author.fullName),
-        ...linkedDevices.map((device) => device.name),
-        ...linkedOrganizations.map((organization) => organization.name),
-      ]),
+      body: joinText([publication.title, publication.abstract]),
       metadata: metadataPairs([
         ["Journal", publication.journal],
         ["Year", year ? String(year) : null],
@@ -158,6 +147,10 @@ export async function buildPublicationDocuments(ctx: IndexContext): Promise<Sear
       keywords: unique([
         publication.doi,
         publication.pmid,
+        publication.journal,
+        PUBLICATION_TYPE_LABELS[publication.publicationType],
+        studyType,
+        ...authors.map((author) => author.fullName),
         ...linkedDevices.map((device) => device.name),
         ...linkedOrganizations.map((organization) => organization.name),
       ]),

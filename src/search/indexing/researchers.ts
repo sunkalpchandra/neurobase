@@ -45,7 +45,7 @@ export async function buildResearcherDocuments(ctx: IndexContext): Promise<Searc
       title: person.fullName,
       subtitle: subtitleParts.length > 0 ? subtitleParts.join(" · ") : null,
       description: person.title ?? "",
-      body: joinText([person.fullName, person.title, organization?.name, ...person.researchAreas]),
+      body: joinText([person.fullName, person.title]),
       metadata: metadataPairs([
         ["Title", person.title],
         ["Organization", organization?.name],
@@ -59,7 +59,7 @@ export async function buildResearcherDocuments(ctx: IndexContext): Promise<Searc
       entities: organization
         ? [entityRef("organization", organization.id, organization.slug, organization.name)]
         : [],
-      keywords: unique(person.researchAreas),
+      keywords: unique([organization?.name, ...person.researchAreas]),
       technologyCategories: [],
       conditions: [],
       invasiveness: null,

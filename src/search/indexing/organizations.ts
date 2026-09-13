@@ -113,14 +113,7 @@ export async function buildOrganizationDocuments(ctx: IndexContext): Promise<Sea
       title: org.name,
       subtitle: location ? `${kindLabel} · ${location}` : kindLabel,
       description: shortDescription(org.description),
-      body: joinText([
-        org.description,
-        ...categoryNames,
-        ...conditionNames,
-        ...interfaceLabels,
-        ...orgDevices.map((device) => device.name),
-        ...aliases,
-      ]),
+      body: joinText([org.description]),
       metadata: metadataPairs([
         ["Founded", org.foundedYear ? String(org.foundedYear) : null],
         ["Headquarters", location],
@@ -145,7 +138,13 @@ export async function buildOrganizationDocuments(ctx: IndexContext): Promise<Sea
             ]
           : []),
       ],
-      keywords: unique([...aliases, ...categoryNames, ...conditionNames]),
+      keywords: unique([
+        ...aliases,
+        ...categoryNames,
+        ...conditionNames,
+        ...interfaceLabels,
+        ...orgDevices.map((device) => device.name),
+      ]),
       technologyCategories: categoryRefs.map((ref) => ref.slug),
       conditions: conditionRefs.map((ref) => ref.slug),
       invasiveness: org.invasiveness,
