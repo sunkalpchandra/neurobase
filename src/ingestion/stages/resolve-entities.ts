@@ -8,8 +8,12 @@ const AMBIGUITY_MARGIN = 0.05;
 
 export interface ResolutionOutcome {
   links: ResolvedLinks;
-  /** Names that could not be resolved confidently, each with the reason. */
-  unresolved: Array<{ name: string; reason: string }>;
+  /** Names that could not be resolved confidently, each with its kind and the reason. */
+  unresolved: Array<{
+    kind: "organization" | "condition" | "device";
+    name: string;
+    reason: string;
+  }>;
 }
 
 /** Lower-cased, punctuation-stripped form used for alias lookups. */
@@ -49,6 +53,7 @@ export async function resolveEntities(
     const runnerUp = candidates[1];
     if (!best) {
       unresolved.push({
+        kind: "organization",
         name,
         reason: `No organization matches "${name}" above similarity ${SIMILARITY_THRESHOLD}`,
       });
@@ -56,6 +61,7 @@ export async function resolveEntities(
     }
     if (runnerUp && best.similarity - runnerUp.similarity < AMBIGUITY_MARGIN) {
       unresolved.push({
+        kind: "organization",
         name,
         reason: `"${name}" matches both "${best.name}" and "${runnerUp.name}" with similar confidence`,
       });
@@ -68,15 +74,23 @@ export async function resolveEntities(
   for (const name of mentions.conditionNames) {
     const id = await repository.resolveConditionByName(name);
     if (id) conditionIds.push(id);
-    else unresolved.push({ name, reason: `Condition "${name}" is not in the taxonomy` });
+    else
+      unresolved.push({
+        kind: "condition",
+        name,
+        reason: `Condition "${name}" is not in the taxonomy`,
+      });
   }
 
   const deviceIds: string[] = [];
   for (const name of mentions.deviceNames) {
     const id = await repository.resolveDeviceByName(name);
     if (id) deviceIds.push(id);
-    else unresolved.push({ name, reason: `Device "${name}" is not recorded` });
+    else unresolved.push({ kind: "device", name, reason: `Device "${name}" is not recorded` });
   }
 
-  return { links: { organizationId, conditionIds, deviceIds, personIds: [] }, unresolved };
+  return {
+    links: { organizationId, relatedOrganizationIds: [], conditionIds, deviceIds, personIds: [] },
+    unresolved,
+  };
 }

@@ -46,6 +46,7 @@ export interface StageCounts {
   invalid: number;
   duplicates: number;
   unresolved: number;
+  organizations: number;
   published: number;
   queued: number;
 }
@@ -59,6 +60,12 @@ export interface PipelineOptions {
   signal?: AbortSignal;
   /** Injected so runs are reproducible in tests. */
   now?: () => Date;
+  /**
+   * Record organizations that an authoritative source names but NeuroBase does not yet
+   * know — a registry sponsor, an FDA applicant, an indexed affiliation. Off by default,
+   * because a name from a weaker source is a guess, not a record.
+   */
+  createOrganizations?: boolean;
 }
 
 export interface PipelineReport {
