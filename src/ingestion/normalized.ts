@@ -38,7 +38,8 @@ const provenance = z.object({
  */
 const affiliation = z.object({
   name: z.string().min(1),
-  kind: z.enum(ORGANIZATION_KINDS).default("company"),
+  /** Null when the catalogue names the institution without classifying it. */
+  kind: z.enum(ORGANIZATION_KINDS).nullable().default(null),
   country: z.string().length(2).nullable().default(null),
 });
 
@@ -79,6 +80,12 @@ export const clinicalTrialRecordSchema = base.extend({
   completionDate: isoDate.default(null),
   completionIsEstimate: z.boolean().default(true),
   sponsorName: z.string().nullable().default(null),
+  /**
+   * The sponsor class the registry states (INDUSTRY, NIH, FED, OTHER_GOV, NETWORK,
+   * INDIV, OTHER, AMBIG, UNKNOWN). Kept as the upstream's own string rather than mapped
+   * here, so the mapping stays in one place and an unrecognised class stays visible.
+   */
+  sponsorClass: z.string().nullable().default(null),
   registryUpdatedOn: isoDate.default(null),
 });
 

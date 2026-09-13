@@ -59,7 +59,19 @@ const studySchema = z.object({
       })
       .optional(),
     sponsorCollaboratorsModule: z
-      .object({ leadSponsor: z.object({ name: z.string().optional() }).optional() })
+      .object({
+        leadSponsor: z
+          .object({
+            name: z.string().optional(),
+            /**
+             * The registry states what kind of body the sponsor is: INDUSTRY, NIH, FED,
+             * OTHER_GOV, NETWORK, INDIV, OTHER, AMBIG or UNKNOWN. A stated class beats
+             * guessing an organization's type from the shape of its name.
+             */
+            class: z.string().optional(),
+          })
+          .optional(),
+      })
       .optional(),
     outcomesModule: z
       .object({ primaryOutcomes: z.array(z.object({ measure: z.string().optional() })).optional() })
@@ -216,6 +228,7 @@ export function createClinicalTrialsAdapter(client?: HttpClient): SourceAdapter 
         completionDate: toIsoDay(completionStruct?.date),
         completionIsEstimate: (completionStruct?.type ?? "ESTIMATED").toUpperCase() !== "ACTUAL",
         sponsorName: sponsor,
+        sponsorClass: sponsorCollaboratorsModule?.leadSponsor?.class ?? null,
         registryUpdatedOn: toIsoDay(statusModule?.lastUpdateSubmitDate),
         mentions: {
           organizationNames: sponsor ? [sponsor] : [],
