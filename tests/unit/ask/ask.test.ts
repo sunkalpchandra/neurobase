@@ -48,6 +48,7 @@ function searchService(results: SearchResult[], total = results.length): SearchS
       terms: ["implanted", "interface"],
       phrases: [],
       expansions: [],
+      literalExpansions: [],
       interpreted: [
         { field: "invasiveness", value: "invasive", label: "Invasive", matchedTerm: "implanted" },
       ],
