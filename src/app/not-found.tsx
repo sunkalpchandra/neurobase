@@ -16,7 +16,10 @@ export default function NotFound() {
             <ButtonLink href={routes.search()} variant="primary" size="sm">
               Search NeuroBase
             </ButtonLink>
-            <ButtonLink href={routes.home()} variant="secondary" size="sm">
+            <ButtonLink href={routes.companies()} variant="secondary" size="sm">
+              Browse companies
+            </ButtonLink>
+            <ButtonLink href={routes.home()} variant="ghost" size="sm">
               Go to the feed
             </ButtonLink>
           </>
