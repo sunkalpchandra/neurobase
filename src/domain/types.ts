@@ -136,7 +136,8 @@ export interface OrganizationRef {
   id: string;
   slug: string;
   name: string;
-  kind: OrganizationKind;
+  /** Null when no source has stated what kind of organization this is. */
+  kind: OrganizationKind | null;
 }
 
 /** Row in the company directory. */
@@ -144,6 +145,8 @@ export interface CompanySummary extends Provenance {
   id: string;
   slug: string;
   name: string;
+  /** Null when no source has stated what kind of organization this is. */
+  kind: OrganizationKind | null;
   description: string;
   technologyCategories: TechnologyCategoryRef[];
   primaryIndication: ConditionRef | null;

@@ -106,7 +106,7 @@ export async function buildOrganizationDocuments(ctx: IndexContext): Promise<Sea
     );
     const location = locationLabel(org.hqCity, org.hqCountry);
     const sourceTypes = sourceTypesFor(claimSources.get(org.id));
-    const kindLabel = ORGANIZATION_KIND_LABELS[org.kind];
+    const kindLabel = org.kind ? ORGANIZATION_KIND_LABELS[org.kind] : null;
 
     return {
       entityType: "organization",
