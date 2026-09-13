@@ -1,4 +1,4 @@
-import { and, eq, inArray, isNotNull, sql } from "drizzle-orm";
+import { and, eq, isNotNull, sql } from "drizzle-orm";
 import type { Database } from "@/db/client";
 import * as schema from "@/db/schema";
 import { classifyCategories } from "./stages/classify";
