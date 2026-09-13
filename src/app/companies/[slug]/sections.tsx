@@ -9,6 +9,7 @@ import {
   ORGANIZATION_RELATIONSHIP_LABELS,
   PATENT_STATUS_LABELS,
   PERSON_ROLE_LABELS,
+  type PersonRole,
   PUBLICATION_TYPE_LABELS,
   REGULATORY_ACTION_TYPE_LABELS,
   ROUND_TYPE_LABELS,
@@ -20,6 +21,7 @@ import {
 } from "@/domain/enums";
 import type {
   ClinicalTrialSummary,
+  LeadershipEntry,
   CompanyProfile,
   DeviceDetail,
   FundingRoundSummary,
@@ -62,6 +64,35 @@ function ExternalLink({ href, children }: { href: string; children: React.ReactN
 
 function SourceCount({ count }: { count: number }) {
   return <span className="text-xs text-ink-muted">{pluralize(count, "source")}</span>;
+}
+
+interface GroupedLeader {
+  person: LeadershipEntry["person"];
+  roles: PersonRole[];
+  years: string;
+}
+
+/**
+ * One row per person. A founder who is also chief executive holds two roles, and the
+ * profile should say so once rather than listing them as two people.
+ */
+function groupLeadership(entries: LeadershipEntry[]): GroupedLeader[] {
+  const byPerson = new Map<string, GroupedLeader>();
+  for (const entry of entries) {
+    const existing = byPerson.get(entry.person.id);
+    if (existing) {
+      if (!existing.roles.includes(entry.role)) existing.roles.push(entry.role);
+      continue;
+    }
+    byPerson.set(entry.person.id, {
+      person: entry.person,
+      roles: [entry.role],
+      years: entry.startYear
+        ? `${entry.startYear}${entry.endYear ? `–${entry.endYear}` : "–"}`
+        : "",
+    });
+  }
+  return [...byPerson.values()];
 }
 
 export function OverviewSection({ profile }: { profile: CompanyProfile }) {
@@ -130,11 +161,8 @@ export function OverviewSection({ profile }: { profile: CompanyProfile }) {
             <h3 className={microLabelClass}>Founders and leadership</h3>
             {profile.leadership.length ? (
               <ul className="mt-1 divide-y divide-line-soft text-sm">
-                {profile.leadership.map((entry) => (
-                  <li
-                    key={`${entry.person.id}-${entry.role}`}
-                    className="flex flex-wrap justify-between gap-x-3 py-1"
-                  >
+                {groupLeadership(profile.leadership).map((entry) => (
+                  <li key={entry.person.id} className="flex flex-wrap justify-between gap-x-3 py-1">
                     <Link
                       href={toRoute(routes.researcher(entry.person.slug))}
                       className="hover:underline"
@@ -142,10 +170,8 @@ export function OverviewSection({ profile }: { profile: CompanyProfile }) {
                       {entry.person.fullName}
                     </Link>
                     <span className="text-ink-muted">
-                      {PERSON_ROLE_LABELS[entry.role]}
-                      {entry.startYear
-                        ? ` · ${entry.startYear}${entry.endYear ? `–${entry.endYear}` : "–"}`
-                        : ""}
+                      {entry.roles.map((role) => PERSON_ROLE_LABELS[role]).join(", ")}
+                      {entry.years ? ` · ${entry.years}` : ""}
                     </span>
                   </li>
                 ))}
