@@ -30,6 +30,7 @@
     "schedule:uninstall": "bash scripts/schedule-install.sh uninstall",
     "refresh": "bash scripts/refresh.sh",
     "db:fixtures": "tsx scripts/seed.ts",
+    "backfill:kinds": "tsx scripts/backfill-organization-kinds.ts",
     "serve": "bash scripts/serve.sh",
     "serve:install": "bash scripts/serve-install.sh install",
     "serve:uninstall": "bash scripts/serve-install.sh uninstall"
