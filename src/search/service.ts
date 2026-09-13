@@ -16,7 +16,7 @@ import type { EntityRef, SearchResult } from "@/domain/types";
 import { toIsoDate } from "@/lib/format";
 import { decodeCursor, encodeCursor } from "./cursor";
 import { loadFacets } from "./facets";
-import { broadenedTsQuery, parseQuery } from "./parser";
+import { broadenedTsQuery, literalTsQuery, parseQuery } from "./parser";
 import { RECENCY_HALF_LIFE_DAYS, combine, weightsFor } from "./scoring";
 import { HEADLINE_OPTIONS, htmlEscapedSql, sanitizeSnippet } from "./snippets";
 import { toNumber, tsqueryCte, whereClause } from "./sql";
@@ -49,6 +49,8 @@ const EMBED_FAILED_DESCRIPTION =
 const BROWSE_DESCRIPTION = "No query terms: results are ordered by recency and source quality.";
 export const BROADENED_NOTE =
   "Results were broadened: no document matched every term, so documents matching any term are shown.";
+export const FILTERS_DROPPED_NOTE =
+  "A filter read from your wording was not applied, because filtering on it left no records.";
 
 export interface SearchServiceDeps {
   embeddings: EmbeddingsProvider | null;
@@ -103,6 +105,26 @@ function clampInt(value: number, min: number, max: number, fallback: number): nu
  * Explicit request filters always win; interpreted filters fill in only the fields
  * the searcher left open, and an interpreted category applies only under "all".
  */
+/**
+ * Whether reading the query narrowed the scope beyond what the visitor asked for. Only
+ * then is there anything to drop on a retry: a query that interpreted to nothing, or one
+ * whose interpretation was already overridden by an explicit filter, is as broad as it
+ * gets.
+ */
+export function interpretedFiltersApplied(
+  request: SearchRequest,
+  parsed: ParsedQuery,
+  scope: Scope,
+): boolean {
+  if (request.applyInterpretedFilters === false) return false;
+  if (!parsed.interpreted.length) return false;
+  const plain = applyInterpretedFilters({ ...request, applyInterpretedFilters: false }, parsed);
+  return (
+    plain.category !== scope.category ||
+    JSON.stringify(plain.filters) !== JSON.stringify(scope.filters)
+  );
+}
+
 export function applyInterpretedFilters(request: SearchRequest, parsed: ParsedQuery): Scope {
   const filters: SearchFilters = { ...request.filters };
   let category: SearchCategory = request.category;
@@ -324,8 +346,39 @@ export function createSearchService(db: Database, deps: SearchServiceDeps): Sear
     let page = await runPage(base);
     let tsquery = base.tsquery;
     let description = resolved.mode.description;
+    let activeScope = scope;
+
+    // Precise first, then broad — the same order the Ask tab retrieves in.
+    //
+    // A word like "stimulation" is read as a modality and "implant" as an invasiveness,
+    // and both of those columns are null on every indexed document, because a record that
+    // names a device almost never classifies it and the pipeline refuses to guess. Applied
+    // unconditionally, an interpretation of the query therefore guaranteed zero results for
+    // the plainest searches a visitor would type. Retry without them and say so, rather
+    // than reporting that the database holds nothing about stimulation.
+    if (page.total === 0 && interpretedFiltersApplied(request, parsed, scope)) {
+      const unfiltered = applyInterpretedFilters(
+        { ...request, applyInterpretedFilters: false },
+        parsed,
+      );
+      // The interpretation also consumed the words it read, so a query made only of facet
+      // words has no lexical query left. Search for what was typed instead of everything.
+      const literal = tsquery ?? literalTsQuery(parsed);
+      const retry = await runPage({
+        ...base,
+        scope: unfiltered,
+        tsquery: literal === "" ? null : literal,
+      });
+      if (retry.total > 0) {
+        page = retry;
+        activeScope = unfiltered;
+        tsquery = literal === "" ? null : literal;
+        description = `${description} ${FILTERS_DROPPED_NOTE}`;
+      }
+    }
+
     if (page.total === 0 && tsquery !== null && parsed.expansions.length >= 2) {
-      const broadened = { ...base, tsquery: broadenedTsQuery(parsed) };
+      const broadened = { ...base, scope: activeScope, tsquery: broadenedTsQuery(parsed) };
       const fallback = await runPage(broadened);
       if (fallback.total > 0) {
         page = fallback;
@@ -336,8 +389,8 @@ export function createSearchService(db: Database, deps: SearchServiceDeps): Sear
 
     const facets = await loadFacets(db, {
       tsquery,
-      category: scope.category,
-      filters: scope.filters,
+      category: activeScope.category,
+      filters: activeScope.filters,
     });
     const hasMore = page.rows.length > pageSize;
     const results = page.rows.slice(0, pageSize).map((row) => toResult(row, weights));
