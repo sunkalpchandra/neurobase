@@ -112,3 +112,24 @@ test.describe("organization directory", () => {
     await expect(page.getByText(/\d+ (companies|company) match/).first()).toBeVisible();
   });
 });
+
+test.describe("device attribution", () => {
+  test("a trial sponsor is never labelled the developer", async ({ page }) => {
+    await page.goto("/devices");
+    // The column heading must not claim more than the data supports: on most rows this
+    // organization is the sponsor of a trial that named the device, not its maker.
+    if (!isMobile(page)) {
+      const table = page.getByRole("table", { name: "Devices" });
+      await expect(
+        table.getByRole("columnheader", { name: "Developer or trial sponsor" }),
+      ).toBeVisible();
+      // Interface type, invasiveness and modality are null on every device in this
+      // database, so their columns are gone rather than showing 669 em dashes.
+      await expect(table.getByRole("columnheader", { name: "Invasiveness" })).toHaveCount(0);
+      await expect(table.getByRole("columnheader", { name: "Modality" })).toHaveCount(0);
+    }
+    // Every attributed row says which of the two relationships it is.
+    const labels = page.getByText(/^(Developer|Named it in a trial)$/);
+    expect(await labels.count()).toBeGreaterThan(0);
+  });
+});
